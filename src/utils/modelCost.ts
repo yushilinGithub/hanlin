@@ -22,6 +22,8 @@ import {
   getDefaultMainLoopModelSetting,
   type ModelShortName,
 } from './model/model.js'
+import { getCatalogModel } from './model/catalog.js'
+import { getCatalogIdFor, splitProviderModel } from '../services/api/providers/index.js'
 
 // @see https://platform.claude.com/docs/en/about-claude/pricing
 export type ModelCosts = {
@@ -142,6 +144,11 @@ function tokensToUSDCost(modelCosts: ModelCosts, usage: Usage): number {
 }
 
 export function getModelCosts(model: string, usage: Usage): ModelCosts {
+  // A catalog model is priced by the catalog. Without this, `/cost` bills every
+  // non-Claude model at the default Claude model's rate via the fallback below.
+  const fromCatalog = getCatalogModelCosts(model)
+  if (fromCatalog) return fromCatalog
+
   const shortName = getCanonicalName(model)
 
   // Check if this is an Opus 4.6 model with fast mode active.
@@ -161,6 +168,25 @@ export function getModelCosts(model: string, usage: Usage): ModelCosts {
     )
   }
   return costs
+}
+
+/**
+ * Pricing from models.dev, which quotes US dollars per million tokens — the same unit as
+ * the `MODEL_COSTS` table, so the numbers carry across unchanged.
+ */
+function getCatalogModelCosts(model: string): ModelCosts | undefined {
+  const { provider, model: bare } = splitProviderModel(model)
+  if (!provider) return undefined
+  const cost = getCatalogModel(getCatalogIdFor(provider), bare)?.cost
+  if (cost?.input === undefined || cost.output === undefined) return undefined
+  return {
+    inputTokens: cost.input,
+    outputTokens: cost.output,
+    // Providers that do not price cache writes separately charge them as input.
+    promptCacheWriteTokens: cost.cache_write ?? cost.input,
+    promptCacheReadTokens: cost.cache_read ?? cost.input,
+    webSearchRequests: 0,
+  }
 }
 
 function trackUnknownModelCost(model: string, shortName: ModelShortName): void {

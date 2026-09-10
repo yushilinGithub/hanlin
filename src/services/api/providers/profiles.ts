@@ -24,6 +24,7 @@ const PROFILES: ProviderProfile[] = [
   },
   {
     id: 'openrouter',
+    catalogId: 'openrouter',
     name: 'OpenRouter',
     protocol: 'openai-chat',
     baseURL: 'https://openrouter.ai/api/v1',
@@ -31,6 +32,7 @@ const PROFILES: ProviderProfile[] = [
   },
   {
     id: 'deepseek',
+    catalogId: 'deepseek',
     name: 'DeepSeek',
     protocol: 'openai-chat',
     baseURL: 'https://api.deepseek.com/v1',
@@ -38,6 +40,7 @@ const PROFILES: ProviderProfile[] = [
   },
   {
     id: 'moonshot',
+    catalogId: 'moonshotai-cn',
     name: 'Moonshot (Kimi)',
     protocol: 'openai-chat',
     baseURL: 'https://api.moonshot.cn/v1',
@@ -47,6 +50,7 @@ const PROFILES: ProviderProfile[] = [
   },
   {
     id: 'together',
+    catalogId: 'togetherai',
     name: 'Together AI',
     protocol: 'openai-chat',
     baseURL: 'https://api.together.xyz/v1',
@@ -54,6 +58,7 @@ const PROFILES: ProviderProfile[] = [
   },
   {
     id: 'groq',
+    catalogId: 'groq',
     name: 'Groq',
     protocol: 'openai-chat',
     baseURL: 'https://api.groq.com/openai/v1',
@@ -61,6 +66,7 @@ const PROFILES: ProviderProfile[] = [
   },
   {
     id: 'fireworks',
+    catalogId: 'fireworks-ai',
     name: 'Fireworks AI',
     protocol: 'openai-chat',
     baseURL: 'https://api.fireworks.ai/inference/v1',
@@ -68,6 +74,7 @@ const PROFILES: ProviderProfile[] = [
   },
   {
     id: 'dashscope',
+    catalogId: 'alibaba-cn',
     name: 'Alibaba DashScope (Qwen)',
     protocol: 'openai-chat',
     baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
@@ -75,6 +82,7 @@ const PROFILES: ProviderProfile[] = [
   },
   {
     id: 'zhipu',
+    catalogId: 'zhipuai',
     name: 'Zhipu (GLM)',
     protocol: 'openai-chat',
     baseURL: 'https://open.bigmodel.cn/api/paas/v4',

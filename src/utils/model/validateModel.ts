@@ -10,6 +10,8 @@ import {
   AuthenticationError,
 } from '@anthropic-ai/sdk'
 import { getModelStrings } from './modelStrings.js'
+import { getCatalogModel } from './catalog.js'
+import { getCatalogIdFor, splitProviderModel } from '../../services/api/providers/index.js'
 
 // Cache valid models to avoid repeated API calls
 const validModelCache = new Map<string, boolean>()
@@ -43,6 +45,14 @@ export async function validateModel(
 
   // Check if it matches ANTHROPIC_CUSTOM_MODEL_OPTION (pre-validated by the user)
   if (normalizedModel === process.env.ANTHROPIC_CUSTOM_MODEL_OPTION) {
+    return { valid: true }
+  }
+
+  // A "provider/model" that the catalog knows is already verified — probing it would spend
+  // a real request, and on a provider whose key is not set yet it would fail for a reason
+  // that has nothing to do with whether the model exists.
+  const split = splitProviderModel(normalizedModel)
+  if (split.provider && getCatalogModel(getCatalogIdFor(split.provider), split.model)) {
     return { valid: true }
   }
 

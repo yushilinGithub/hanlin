@@ -14,6 +14,14 @@ import {
 } from '../modelCost.js'
 import { getSettings_DEPRECATED } from '../settings/settings.js'
 import { checkOpus1mAccess, checkSonnet1mAccess } from './check1mAccess.js'
+import {
+  getCatalogProvider,
+  type CatalogModel,
+} from './catalog.js'
+import {
+  getCatalogIdFor,
+  listAvailableProviders,
+} from '../../services/api/providers/index.js'
 import { getAPIProvider } from './providers.js'
 import { isModelAllowed } from './modelAllowlist.js'
 import {
@@ -40,6 +48,88 @@ export type ModelOption = {
   label: string
   description: string
   descriptionForModel?: string
+  /** Section headers are rendered but not selectable. */
+  disabled?: boolean
+}
+
+/** Sentinel option value that opens the all-providers browser. */
+export const BROWSE_PROVIDERS_VALUE = '__browse_providers__'
+
+function formatContext(tokens: number | undefined): string | undefined {
+  if (!tokens) return undefined
+  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(tokens % 1_000_000 === 0 ? 0 : 1)}M ctx`
+  return `${Math.round(tokens / 1000)}k ctx`
+}
+
+/** Catalog prices carry more decimals than are useful in a one-line description. */
+function formatPrice(value: number): string {
+  if (value === 0) return '0'
+  if (value < 0.01) return value.toFixed(4).replace(/0+$/, '')
+  if (value < 1) return value.toFixed(3).replace(/0+$/, '')
+  return value.toFixed(2).replace(/\.?0+$/, '')
+}
+
+/** One line of catalog facts: context, price per Mtok, whether it reasons. */
+export function describeCatalogModel(model: CatalogModel): string {
+  const parts = [formatContext(model.limit?.context)]
+  if (model.cost?.input !== undefined && model.cost?.output !== undefined) {
+    parts.push(`$${formatPrice(model.cost.input)}/$${formatPrice(model.cost.output)} per Mtok`)
+  }
+  if (model.reasoning) parts.push('reasoning')
+  return parts.filter(Boolean).join(' · ') || model.id
+}
+
+function byNewestFirst(a: CatalogModel, b: CatalogModel): number {
+  return (b.release_date ?? '').localeCompare(a.release_date ?? '')
+}
+
+/**
+ * Models a provider offers, newest first.
+ *
+ * Models without tool calling are excluded outright — finWorker is an agent, and a model
+ * that cannot call a tool cannot run the loop.
+ */
+export function getCatalogModelsFor(providerId: string): CatalogModel[] {
+  const provider = getCatalogProvider(getCatalogIdFor(providerId))
+  if (!provider) return []
+  return Object.values(provider.models)
+    .filter(m => m.tool_call !== false)
+    .sort(byNewestFirst)
+}
+
+/** Turn a catalog model into a picker row keyed by `provider/model`. */
+export function catalogModelOption(providerId: string, model: CatalogModel): ModelOption {
+  return {
+    value: `${providerId}/${model.id}`,
+    label: model.name ?? model.id,
+    description: describeCatalogModel(model),
+  }
+}
+
+/**
+ * Inline sections for providers the user can already reach.
+ *
+ * Everything else lives behind the browse step — models.dev lists over two hundred
+ * providers, and the picker has no search box.
+ */
+function getReachableProviderOptions(perProviderLimit = 15): ModelOption[] {
+  const out: ModelOption[] = []
+  const configured = getSettings_DEPRECATED()?.providers ?? {}
+
+  for (const provider of listAvailableProviders()) {
+    const models = getCatalogModelsFor(provider.id)
+    if (models.length === 0) continue
+    // An explicitly configured provider is one the user chose, so show all of it.
+    const shown = configured[provider.id] ? models : models.slice(0, perProviderLimit)
+    out.push({
+      value: `__header_${provider.id}`,
+      label: `── ${provider.name} ──`,
+      description: '',
+      disabled: true,
+    })
+    for (const model of shown) out.push(catalogModelOption(provider.id, model))
+  }
+  return out
 }
 
 export function getDefaultOptionForUser(fastMode = false): ModelOption {
@@ -458,7 +548,11 @@ function getKnownModelOption(model: string): ModelOption | null {
   }
 }
 
-export function getModelOptions(fastMode = false): ModelOption[] {
+/**
+ * Claude options plus whatever the user configured — the list as it was before providers
+ * existed. `getModelOptions` layers the cross-provider catalog on top.
+ */
+function getAnthropicModelOptions(fastMode = false): ModelOption[] {
   const options = getModelOptionsBase(fastMode)
 
   // Add the custom model from the ANTHROPIC_CUSTOM_MODEL_OPTION env var
@@ -524,6 +618,23 @@ export function getModelOptions(fastMode = false): ModelOption[] {
   }
 }
 
+export function getModelOptions(fastMode = false): ModelOption[] {
+  const options = getAnthropicModelOptions(fastMode)
+  const catalog = filterModelOptionsByAllowlist(getReachableProviderOptions())
+
+  // Every provider models.dev knows about is reachable through the browse step, so the
+  // inline list stays short without hiding anything.
+  return dropEmptySections([
+    ...options,
+    ...catalog,
+    {
+      value: BROWSE_PROVIDERS_VALUE,
+      label: 'Browse all providers…',
+      description: 'Pick from every provider and model in the catalog',
+    },
+  ])
+}
+
 /**
  * Filter model options by the availableModels allowlist.
  * Always preserves the "Default" option (value: null).
@@ -535,7 +646,22 @@ function filterModelOptionsByAllowlist(options: ModelOption[]): ModelOption[] {
   }
   return options.filter(
     opt =>
-      opt.value === null || (opt.value !== null && isModelAllowed(opt.value)),
+      opt.value === null ||
+      opt.disabled === true ||
+      opt.value === BROWSE_PROVIDERS_VALUE ||
+      (opt.value !== null && isModelAllowed(opt.value)),
   )
+}
+
+/**
+ * Drop a provider section whose models were all removed by the allowlist, so an enterprise
+ * allowlist never leaves a bare header behind.
+ */
+function dropEmptySections(options: ModelOption[]): ModelOption[] {
+  return options.filter((opt, i) => {
+    if (opt.disabled !== true) return true
+    const next = options[i + 1]
+    return next !== undefined && next.disabled !== true
+  })
 }
 

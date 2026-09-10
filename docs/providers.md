@@ -45,6 +45,48 @@ Built-in provider ids: `openai-compatible`, `ollama`, `openrouter`, `deepseek`, 
 Misconfiguration fails at startup with an actionable message rather than as an opaque
 error on the first request.
 
+## Choosing a model with `/model`
+
+`/model` lists Claude's models, then a section per provider you can already reach — one
+configured in `settings.json`, or one whose API key is in the environment. Each row shows
+what the catalog knows:
+
+```
+  ── Alibaba DashScope (Qwen) ──
+  DeepSeek V4 Pro       1M ctx · $0.44/$0.87 per Mtok · reasoning
+  Qwen3.8 Max           1M ctx · $1.78/$5.33 per Mtok · reasoning
+
+  Browse all providers…
+```
+
+`Browse all providers…` opens the full catalog: every provider, then its models. Providers
+you cannot reach yet are still listed and marked with the env var they need, so you can see
+what exists before setting one up. Selecting such a model still applies it — the
+confirmation names the variable to set rather than failing later.
+
+Models without tool calling are omitted throughout: finWorker is an agent, and a model that
+cannot call a tool cannot run the loop.
+
+## The model catalog
+
+Provider endpoints, model limits and pricing come from [models.dev](https://models.dev) —
+the same catalog opencode uses. It is fetched in the background, cached at
+`~/.claude/cache/models-dev.json`, and refreshed once a day. finWorker never blocks on it:
+with no cache and no network, `/model` still lists Claude's models and anything you
+configured explicitly.
+
+| Variable | Purpose |
+|---|---|
+| `FINWORKER_MODELS_URL` | Alternate catalog URL |
+| `FINWORKER_DISABLE_MODELS_FETCH` | Never fetch; use the cache if present |
+
+This is what makes `alibaba-cn/deepseek-v4-pro` work without finWorker hardcoding Alibaba:
+the catalog already records the endpoint, the key's env var and the model's 1M context.
+
+Built-in short ids are aliases for catalog ids where they differ — `dashscope` is
+`alibaba-cn`, `moonshot` is `moonshotai-cn`, `fireworks` is `fireworks-ai`, `zhipu` is
+`zhipuai`, `together` is `togetherai`. Either form works.
+
 ## Configuring in settings.json
 
 Environment variables suit one-off runs; `settings.json` is the durable form. A

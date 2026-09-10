@@ -1,4 +1,5 @@
 import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from '../../services/analytics/index.js'
+import { isCustomProviderActive } from '../../services/api/providers/index.js'
 import { isEnvTruthy } from '../envUtils.js'
 
 /**
@@ -20,8 +21,10 @@ export type APIProvider = AnthropicAPIProvider | 'custom'
 
 export function getAPIProvider(): APIProvider {
   // Checked first: a configured provider overrides the Anthropic transports, which are
-  // only meaningful when Anthropic is serving the model.
-  if (process.env.FINWORKER_PROVIDER?.trim()) {
+  // only meaningful when Anthropic is serving the model. This must also see a mid-session
+  // `/model` switch — otherwise every `=== 'firstParty'` gate (beta headers, prompt-cache
+  // scope, eager tool streaming) would stay on for a provider that rejects them.
+  if (isCustomProviderActive()) {
     return 'custom'
   }
   return isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK)

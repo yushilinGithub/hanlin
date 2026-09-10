@@ -43,6 +43,13 @@ export type ProviderProfile = {
   headers?: Record<string, string>
   /** Tool schema projection this provider requires. Defaults to `openai`. */
   toolSchema?: ToolSchemaDialect
+  /**
+   * The models.dev id for this same endpoint, when it differs from ours.
+   *
+   * finWorker's short ids predate the catalog and are what users have configured, so they
+   * stay — but model metadata, pricing and limits are looked up under this id.
+   */
+  catalogId?: string
 }
 
 /** A profile with configuration applied — everything needed to issue a request. */
