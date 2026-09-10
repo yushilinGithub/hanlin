@@ -71,7 +71,7 @@ cannot call a tool cannot run the loop.
 
 Provider endpoints, model limits and pricing come from [models.dev](https://models.dev) —
 the same catalog opencode uses. It is fetched in the background, cached at
-`~/.claude/cache/models-dev.json`, and refreshed once a day. finWorker never blocks on it:
+`~/.finworker/cache/models-dev.json`, and refreshed once a day. finWorker never blocks on it:
 with no cache and no network, `/model` still lists Claude's models and anything you
 configured explicitly.
 
@@ -86,6 +86,28 @@ the catalog already records the endpoint, the key's env var and the model's 1M c
 Built-in short ids are aliases for catalog ids where they differ — `dashscope` is
 `alibaba-cn`, `moonshot` is `moonshotai-cn`, `fireworks` is `fireworks-ai`, `zhipu` is
 `zhipuai`, `together` is `togetherai`. Either form works.
+
+## Where configuration lives
+
+finWorker keeps its own configuration, separate from Claude Code's:
+
+| Scope | Path |
+|---|---|
+| User | `~/.finworker/settings.json` |
+| Global state | `~/.finworker.json` |
+| Project | `<repo>/.claude/settings.json` |
+| Local | `<repo>/.claude/settings.local.json` |
+
+`FINWORKER_CONFIG_DIR` (or `CLAUDE_CONFIG_DIR`) moves the user directory. On first run,
+`~/.finworker` is seeded from `~/.claude` if that exists, minus the daemon and IDE state of
+any running Claude Code; the two then diverge and `~/.claude` is never read again.
+
+Project-level paths deliberately stay `.claude/` — that directory is a per-repo convention
+and is often committed, so renaming it would orphan configs that already exist.
+
+**The macOS keychain entry is still shared** with Claude Code. Logging out of one signs out
+the other, and a token refresh in either can invalidate the other's session. The copied
+`~/.finworker/.credentials.json` is only consulted when the keychain has no entry.
 
 ## Configuring in settings.json
 

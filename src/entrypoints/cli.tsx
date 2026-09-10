@@ -289,6 +289,15 @@ async function main(): Promise<void> {
     startCapturingEarlyInput
   } = await import('../utils/earlyInput.js');
   startCapturingEarlyInput();
+
+  // Seed ~/.finworker from ~/.claude on first run. This has to happen before main.js is
+  // even imported: module evaluation there reads settings, and by the time the migration
+  // runner in main.tsx executes, an empty config directory has already been loaded.
+  const {
+    ensureConfigHomeSeeded
+  } = await import('../utils/configHome.js');
+  ensureConfigHomeSeeded();
+
   profileCheckpoint('cli_before_main_import');
   const {
     main: cliMain

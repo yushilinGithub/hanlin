@@ -30,7 +30,12 @@ export function getMacOsKeychainStorageServiceName(
   serviceSuffix: string = '',
 ): string {
   const configDir = getClaudeConfigHomeDir()
-  const isDefaultDir = !process.env.CLAUDE_CONFIG_DIR
+  // Both override vars count: two different FINWORKER_CONFIG_DIR values would otherwise
+  // collide on one keychain entry, which is exactly what the directory hash prevents.
+  // With neither set the hash is omitted, so the default entry stays shared with Claude
+  // Code — deliberate, and the reason logging out of one signs out the other.
+  const isDefaultDir =
+    !process.env.CLAUDE_CONFIG_DIR && !process.env.FINWORKER_CONFIG_DIR
 
   // Use a hash of the config dir path to create a unique but stable suffix
   // Only add suffix for non-default directories to maintain backwards compatibility

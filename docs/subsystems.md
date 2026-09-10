@@ -260,7 +260,7 @@ Claude Code's persistent memory system, based on `CLAUDE.md` files.
 | Scope | Location | Purpose |
 |-------|----------|---------|
 | Project memory | `CLAUDE.md` in project root | Project-specific facts, conventions |
-| User memory | `~/.claude/CLAUDE.md` | User preferences, cross-project |
+| User memory |  `~/.finworker/CLAUDE.md` | User preferences, cross-project |
 | Extracted memories | `src/services/extractMemories/` | Auto-extracted from conversations |
 | Team memory sync | `src/services/teamMemorySync/` | Shared team knowledge |
 
