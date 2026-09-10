@@ -18,6 +18,11 @@ import {
 } from 'src/utils/model/providers.js'
 import { getProxyFetchOptions } from 'src/utils/proxy.js'
 import {
+  createProviderFetch,
+  isCustomProviderActive,
+  resolveProvider,
+} from './providers/index.js'
+import {
   getIsNonInteractiveSession,
   getSessionId,
 } from '../../bootstrap/state.js'
@@ -126,6 +131,28 @@ export async function getAnthropicClient({
   )
   if (additionalProtectionEnabled) {
     defaultHeaders['x-anthropic-additional-protection'] = 'true'
+  }
+
+  // Non-Anthropic providers short-circuit here, before any Anthropic credential is
+  // touched: no OAuth refresh, no API-key helper, no Authorization header. The translating
+  // fetch builds its own headers from the provider config and discards these defaults, so
+  // an Anthropic token can never reach a third-party endpoint.
+  if (isCustomProviderActive()) {
+    const provider = resolveProvider()
+    return new Anthropic({
+      defaultHeaders,
+      maxRetries,
+      timeout: parseInt(process.env.API_TIMEOUT_MS || String(600 * 1000), 10),
+      dangerouslyAllowBrowser: true,
+      // The SDK needs a syntactically valid base URL to build request paths, but every
+      // request is intercepted before it leaves. A deliberately unroutable host means a
+      // gap in that interception fails loudly instead of silently posting the
+      // provider's payload to Anthropic.
+      baseURL: 'https://provider.invalid',
+      apiKey: provider.apiKey ?? 'unused',
+      fetch: createProviderFetch(provider, buildFetch(fetchOverride, source) as never) as never,
+      ...(isDebugToStdErr() && { logger: createStderrLogger() }),
+    })
   }
 
   logForDebugging('[API:auth] OAuth token check starting')

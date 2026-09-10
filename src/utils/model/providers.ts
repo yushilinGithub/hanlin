@@ -1,9 +1,29 @@
 import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from '../../services/analytics/index.js'
 import { isEnvTruthy } from '../envUtils.js'
 
-export type APIProvider = 'firstParty' | 'bedrock' | 'vertex' | 'foundry'
+/**
+ * Providers that serve Claude models over an Anthropic-shaped API.
+ *
+ * These four share the Claude model table, the beta headers and the Anthropic request
+ * shape; they differ only in transport and credentials.
+ */
+export type AnthropicAPIProvider = 'firstParty' | 'bedrock' | 'vertex' | 'foundry'
+
+/**
+ * Where model requests go.
+ *
+ * `custom` is any non-Anthropic provider configured through `src/services/api/providers`.
+ * It serves no Claude models and accepts none of the Anthropic-only request shapes, so
+ * every `=== 'firstParty'` gate in the codebase correctly excludes it.
+ */
+export type APIProvider = AnthropicAPIProvider | 'custom'
 
 export function getAPIProvider(): APIProvider {
+  // Checked first: a configured provider overrides the Anthropic transports, which are
+  // only meaningful when Anthropic is serving the model.
+  if (process.env.FINWORKER_PROVIDER?.trim()) {
+    return 'custom'
+  }
   return isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK)
     ? 'bedrock'
     : isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX)
@@ -11,6 +31,17 @@ export function getAPIProvider(): APIProvider {
       : isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)
         ? 'foundry'
         : 'firstParty'
+}
+
+/**
+ * The Anthropic transport in use, for the tables that are Claude-specific.
+ *
+ * A custom provider has no Claude model strings of its own; callers that need a column of
+ * the Claude table fall back to the canonical first-party names.
+ */
+export function getAnthropicAPIProvider(): AnthropicAPIProvider {
+  const provider = getAPIProvider()
+  return provider === 'custom' ? 'firstParty' : provider
 }
 
 export function getAPIProviderForStatsig(): AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS {
@@ -38,4 +69,3 @@ export function isFirstPartyAnthropicBaseUrl(): boolean {
     return false
   }
 }
-

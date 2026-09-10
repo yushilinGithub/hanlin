@@ -34,7 +34,16 @@ export type ModelName = string
 export type ModelSetting = ModelName | ModelAlias | null
 
 export function getSmallFastModel(): ModelName {
-  return process.env.ANTHROPIC_SMALL_FAST_MODEL || getDefaultHaikuModel()
+  if (process.env.ANTHROPIC_SMALL_FAST_MODEL) {
+    return process.env.ANTHROPIC_SMALL_FAST_MODEL
+  }
+  // A custom provider has no Haiku. Falling back to the main model keeps the cheap
+  // side-queries (titles, summaries) working instead of asking the provider for a model
+  // it has never heard of; set FINWORKER_SMALL_MODEL to pick a genuinely smaller one.
+  if (getAPIProvider() === 'custom') {
+    return process.env.FINWORKER_SMALL_MODEL || getMainLoopModel()
+  }
+  return getDefaultHaikuModel()
 }
 
 export function isNonCustomOpusModel(model: ModelName): boolean {
@@ -55,7 +64,7 @@ export function isNonCustomOpusModel(model: ModelName): boolean {
  * Priority order within this function:
  * 1. Model override during session (from /model command) - highest priority
  * 2. Model override at startup (from --model flag)
- * 3. ANTHROPIC_MODEL environment variable
+ * 3. FINWORKER_MODEL / ANTHROPIC_MODEL environment variable
  * 4. Settings (from user's saved settings)
  */
 export function getUserSpecifiedModelSetting(): ModelSetting | undefined {
@@ -66,7 +75,10 @@ export function getUserSpecifiedModelSetting(): ModelSetting | undefined {
     specifiedModel = modelOverride
   } else {
     const settings = getSettings_DEPRECATED() || {}
-    specifiedModel = process.env.ANTHROPIC_MODEL || settings.model || undefined
+    // FINWORKER_MODEL first: when a custom provider is configured, its model id is what
+    // the user means, and ANTHROPIC_MODEL may still be set from an earlier session.
+    specifiedModel =
+      process.env.FINWORKER_MODEL || process.env.ANTHROPIC_MODEL || settings.model || undefined
   }
 
   // Ignore the user-specified model if it's not in the availableModels allowlist.

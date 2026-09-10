@@ -11,6 +11,10 @@ import { getDisplayPath } from './file.js';
 import { formatNumber } from './format.js';
 import { getIdeClientName, type IDEExtensionInstallationStatus, isJetBrainsIde, toIDEDisplayName } from './ide.js';
 import { getClaudeAiUserDefaultModelDescription, modelDisplayString } from './model/model.js';
+import {
+  getConfiguredProviderId,
+  getProviderProfile
+} from '../services/api/providers/index.js';
 import { getAPIProvider } from './model/providers.js';
 import { getMTLSConfig } from './mtls.js';
 import { checkInstall } from './nativeInstaller/index.js';
@@ -241,11 +245,14 @@ export function buildAPIProviderProperties(): Property[] {
   const apiProvider = getAPIProvider();
   const properties: Property[] = [];
   if (apiProvider !== 'firstParty') {
-    const providerLabel = {
-      bedrock: 'AWS Bedrock',
-      vertex: 'Google Vertex AI',
-      foundry: 'Microsoft Foundry'
-    }[apiProvider];
+    const providerLabel =
+      apiProvider === 'custom'
+        ? (getProviderProfile(getConfiguredProviderId() ?? '')?.name ?? 'Custom provider')
+        : {
+            bedrock: 'AWS Bedrock',
+            vertex: 'Google Vertex AI',
+            foundry: 'Microsoft Foundry'
+          }[apiProvider];
     properties.push({
       label: 'API provider',
       value: providerLabel
@@ -257,6 +264,16 @@ export function buildAPIProviderProperties(): Property[] {
       properties.push({
         label: 'Anthropic base URL',
         value: anthropicBaseUrl
+      });
+    }
+  } else if (apiProvider === 'custom') {
+    const baseUrl =
+      process.env.FINWORKER_BASE_URL ||
+      getProviderProfile(getConfiguredProviderId() ?? '')?.baseURL;
+    if (baseUrl) {
+      properties.push({
+        label: 'Provider base URL',
+        value: baseUrl
       });
     }
   } else if (apiProvider === 'bedrock') {
