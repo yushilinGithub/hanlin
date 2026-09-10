@@ -28,6 +28,7 @@ import { LIGHTNING_BOLT } from '../../constants/figures.js'
 import { isModelAllowed } from './modelAllowlist.js'
 import { type ModelAlias, isModelAlias } from './aliases.js'
 import { capitalize } from '../stringUtils.js'
+import { splitProviderModel } from '../../services/api/providers/index.js'
 
 export type ModelShortName = string
 export type ModelName = string
@@ -626,6 +627,8 @@ export function getMarketingNameForModel(modelId: string): string | undefined {
 }
 
 export function normalizeModelStringForAPI(model: string): string {
-  return model.replace(/\[(1|2)m\]/gi, '')
+  const withoutTags = model.replace(/\[(1|2)m\]/gi, '')
+  // A "provider/model" setting names both; only the model id belongs on the wire.
+  return splitProviderModel(withoutTags).model
 }
 

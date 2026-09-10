@@ -4,6 +4,7 @@ import { getGlobalConfig } from './config.js'
 import { isEnvTruthy } from './envUtils.js'
 import { getCanonicalName } from './model/model.js'
 import { getModelCapability } from './model/modelCapabilities.js'
+import { getConfiguredModelLimits } from '../services/api/providers/index.js'
 
 // Model context window size (200k tokens for all models right now)
 export const MODEL_CONTEXT_WINDOW_DEFAULT = 200_000
@@ -64,6 +65,13 @@ export function getContextWindowForModel(
     if (!isNaN(override) && override > 0) {
       return override
     }
+  }
+
+  // A configured provider's model is metered against Claude defaults otherwise, so a 1M
+  // model would autocompact at 20% of its real capacity.
+  const configured = getConfiguredModelLimits(model)
+  if (configured?.contextWindow && configured.contextWindow > 0) {
+    return configured.contextWindow
   }
 
   // [1m] suffix — explicit client-side opt-in, respected over all detection
@@ -159,6 +167,14 @@ export function getModelMaxOutputTokens(model: string): {
       defaultTokens = antModel.defaultMaxTokens ?? MAX_OUTPUT_TOKENS_DEFAULT
       upperLimit = antModel.upperMaxTokensLimit ?? MAX_OUTPUT_TOKENS_UPPER_LIMIT
       return { default: defaultTokens, upperLimit }
+    }
+  }
+
+  const configuredLimits = getConfiguredModelLimits(model)
+  if (configuredLimits?.maxOutputTokens && configuredLimits.maxOutputTokens > 0) {
+    return {
+      default: configuredLimits.maxOutputTokens,
+      upperLimit: configuredLimits.maxOutputTokens,
     }
   }
 

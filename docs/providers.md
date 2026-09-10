@@ -22,12 +22,21 @@ finworker
 DEEPSEEK_API_KEY=sk-… FINWORKER_PROVIDER=deepseek finworker
 ```
 
+### DeepSeek V4 Pro
+
+`deepseek-v4-pro` is served by Alibaba's DashScope compatible-mode endpoint, not by
+DeepSeek's own API:
+
+```bash
+DASHSCOPE_API_KEY=sk-… FINWORKER_PROVIDER=dashscope FINWORKER_MODEL=deepseek-v4-pro finworker
+```
+
 | Variable | Purpose |
 |---|---|
 | `FINWORKER_PROVIDER` | Provider id. Unset means Anthropic. |
 | `FINWORKER_BASE_URL` | Overrides the provider's default endpoint. Required for `openai-compatible`. |
 | `FINWORKER_API_KEY` | Overrides the provider's conventional key env var. |
-| `FINWORKER_MODEL` | Model id to run. Takes precedence over `ANTHROPIC_MODEL`. |
+| `FINWORKER_MODEL` | Model id to run. Takes precedence over `ANTHROPIC_MODEL`. Accepts `provider/model`. |
 | `FINWORKER_SMALL_MODEL` | Cheaper model for side-queries (titles, summaries). Defaults to the main model. |
 
 Built-in provider ids: `openai-compatible`, `ollama`, `openrouter`, `deepseek`, `moonshot`,
@@ -35,6 +44,60 @@ Built-in provider ids: `openai-compatible`, `ollama`, `openrouter`, `deepseek`, 
 
 Misconfiguration fails at startup with an actionable message rather than as an opaque
 error on the first request.
+
+## Configuring in settings.json
+
+Environment variables suit one-off runs; `settings.json` is the durable form. A
+`provider/model` value in `model` selects both at once.
+
+```jsonc
+{
+  "model": "dashscope/deepseek-v4-pro",
+  "providers": {
+    "dashscope": {
+      "models": {
+        // Without these, a 1M model is metered against Claude's 200k default and
+        // autocompacts at a fifth of its real capacity.
+        "deepseek-v4-pro": { "contextWindow": 1000000, "maxOutputTokens": 384000 }
+      }
+    }
+  }
+}
+```
+
+An entry under `providers` overrides the built-in profile field by field, so pointing a
+known provider at a mirror does not mean restating the rest of it:
+
+```jsonc
+{
+  "provider": "deepseek",
+  "model": "deepseek-chat",
+  "providers": {
+    "deepseek": { "baseURL": "https://my-gateway.internal/v1", "apiKeyEnv": "GATEWAY_KEY" }
+  }
+}
+```
+
+A provider that is not built in is defined the same way — give it a `baseURL` and it
+works:
+
+```jsonc
+{
+  "model": "local-vllm/Qwen3-Coder-30B",
+  "providers": {
+    "local-vllm": { "baseURL": "http://localhost:8000/v1", "name": "Local vLLM" }
+  }
+}
+```
+
+Prefer `apiKeyEnv` over `apiKey`: settings.json is plaintext and often checked in.
+
+### Precedence
+
+Provider: `FINWORKER_PROVIDER` → `provider/` prefix on the model → `provider` in settings.
+Model: `/model` → `--model` → `FINWORKER_MODEL` → `ANTHROPIC_MODEL` → `model` in settings.
+Key: `FINWORKER_API_KEY` → `providers.<id>.apiKeyEnv` → `providers.<id>.apiKey` → the
+provider's conventional env var.
 
 ## How it works
 

@@ -37,6 +37,64 @@ export const EnvironmentVariablesSchema = lazySchema(() =>
 )
 
 /**
+ * Schema for one entry of the `providers` map.
+ *
+ * Every field is optional: an entry may fully define a provider that is not built in, or
+ * override a single field of one that is (typically `baseURL` for a self-hosted mirror).
+ */
+export const ProviderSettingsSchema = lazySchema(() =>
+  z
+    .object({
+      baseURL: z
+        .string()
+        .optional()
+        .describe("Endpoint, including any version prefix (e.g. '.../v1')"),
+      apiKey: z
+        .string()
+        .optional()
+        .describe(
+          'API key. Prefer apiKeyEnv — a key here is stored in plaintext in settings.json',
+        ),
+      apiKeyEnv: z
+        .string()
+        .optional()
+        .describe('Name of the environment variable holding the API key'),
+      headers: z
+        .record(z.string(), z.string())
+        .optional()
+        .describe('Extra headers sent with every request to this provider'),
+      name: z.string().optional().describe('Display name shown in /status and /model'),
+      toolSchema: z
+        .enum(['openai', 'restricted'])
+        .optional()
+        .describe(
+          "JSON Schema dialect for tool definitions. 'restricted' also strips prefixItems " +
+            'and tuple-form items, which Moonshot/Kimi reject.',
+        ),
+      models: z
+        .record(
+          z.string(),
+          z.object({
+            contextWindow: z
+              .number()
+              .optional()
+              .describe('Total context window in tokens. Defaults to 200k when unset.'),
+            maxOutputTokens: z
+              .number()
+              .optional()
+              .describe('Maximum output tokens per response'),
+          }),
+        )
+        .optional()
+        .describe(
+          'Per-model limits. Without these, a non-Claude model is metered against Claude ' +
+            'defaults, so the context meter and autocompact trigger at the wrong point.',
+        ),
+    })
+    .strict(),
+)
+
+/**
  * Schema for permissions section
  */
 export const PermissionsSchema = lazySchema(() =>
@@ -395,6 +453,22 @@ export const SettingsSchema = lazySchema(() =>
           'Override mapping from Anthropic model ID (e.g. "claude-opus-4-6") to provider-specific ' +
             'model ID (e.g. a Bedrock inference profile ARN). Typically set in managed settings by ' +
             'enterprise administrators.',
+        ),
+      // Non-Anthropic model providers — see docs/providers.md
+      provider: z
+        .string()
+        .optional()
+        .describe(
+          'Model provider id (e.g. "dashscope", "deepseek", "ollama", "openai-compatible"). ' +
+            'When unset, finWorker uses Anthropic. Overridden by FINWORKER_PROVIDER. ' +
+            'A "provider/model" value in `model` selects the provider too.',
+        ),
+      providers: z
+        .record(z.string(), ProviderSettingsSchema())
+        .optional()
+        .describe(
+          'Per-provider configuration. Entries override the built-in profile for that id, ' +
+            'and a new id defines a provider that is not built in.',
         ),
       // Whether to automatically approve all MCP servers in the project
       enableAllProjectMcpServers: z
