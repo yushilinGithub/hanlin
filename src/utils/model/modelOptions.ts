@@ -72,8 +72,10 @@ function formatPrice(value: number): string {
 /** One line of catalog facts: context, price per Mtok, whether it reasons. */
 export function describeCatalogModel(model: CatalogModel): string {
   const parts = [formatContext(model.limit?.context)]
-  if (model.cost?.input !== undefined && model.cost?.output !== undefined) {
-    parts.push(`$${formatPrice(model.cost.input)}/$${formatPrice(model.cost.output)} per Mtok`)
+  // Prepaid plans (Alibaba's token plans, for one) report zero per-token cost. Printing
+  // "$0/$0" reads as free rather than as "billed another way", so say nothing instead.
+  if (model.cost?.input) {
+    parts.push(`$${formatPrice(model.cost.input)}/$${formatPrice(model.cost.output ?? 0)} per Mtok`)
   }
   if (model.reasoning) parts.push('reasoning')
   return parts.filter(Boolean).join(' · ') || model.id
