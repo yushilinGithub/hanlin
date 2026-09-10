@@ -27,7 +27,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const SRC_ROOT = path.resolve(
-  process.env.FINCLAW_SRC_ROOT ?? process.env.CLAUDE_CODE_SRC_ROOT ?? path.join(__dirname, "..", "..", "src")
+  process.env.FINWORKER_SRC_ROOT ?? process.env.CLAUDE_CODE_SRC_ROOT ?? path.join(__dirname, "..", "..", "src")
 );
 
 // ---------------------------------------------------------------------------
@@ -147,7 +147,7 @@ async function getCommandList(): Promise<CommandInfo[]> {
 
 export function createServer(): Server {
   const server = new Server(
-    { name: "finclaw-explorer", version: "1.1.0" },
+    { name: "finworker-explorer", version: "1.1.0" },
     {
       capabilities: {
         tools: {},
@@ -162,20 +162,20 @@ export function createServer(): Server {
   server.setRequestHandler(ListResourcesRequestSchema, async () => ({
     resources: [
       {
-        uri: "finclaw://architecture",
+        uri: "finworker://architecture",
         name: "Architecture Overview",
         description:
-          "High-level overview of the FinClaw source architecture",
+          "High-level overview of the FinWorker source architecture",
         mimeType: "text/markdown",
       },
       {
-        uri: "finclaw://tools",
+        uri: "finworker://tools",
         name: "Tool Registry",
         description: "List of all agent tools with their files",
         mimeType: "application/json",
       },
       {
-        uri: "finclaw://commands",
+        uri: "finworker://commands",
         name: "Command Registry",
         description: "List of all slash commands",
         mimeType: "application/json",
@@ -188,10 +188,10 @@ export function createServer(): Server {
     async () => ({
       resourceTemplates: [
         {
-          uriTemplate: "finclaw://source/{path}",
+          uriTemplate: "finworker://source/{path}",
           name: "Source file",
           description:
-            "Read a source file from the FinClaw src/ directory",
+            "Read a source file from the FinWorker src/ directory",
           mimeType: "text/plain",
         },
       ],
@@ -203,7 +203,7 @@ export function createServer(): Server {
     async (request: { params: { uri: string } }) => {
       const { uri } = request.params;
 
-      if (uri === "finclaw://architecture") {
+      if (uri === "finworker://architecture") {
         const readmePath = path.resolve(SRC_ROOT, "..", "README.md");
         let text: string;
         try {
@@ -214,7 +214,7 @@ export function createServer(): Server {
         return { contents: [{ uri, mimeType: "text/markdown", text }] };
       }
 
-      if (uri === "finclaw://tools") {
+      if (uri === "finworker://tools") {
         const tools = await getToolList();
         return {
           contents: [
@@ -227,7 +227,7 @@ export function createServer(): Server {
         };
       }
 
-      if (uri === "finclaw://commands") {
+      if (uri === "finworker://commands") {
         const commands = await getCommandList();
         return {
           contents: [
@@ -240,8 +240,8 @@ export function createServer(): Server {
         };
       }
 
-      if (uri.startsWith("finclaw://source/")) {
-        const relPath = uri.slice("finclaw://source/".length);
+      if (uri.startsWith("finworker://source/")) {
+        const relPath = uri.slice("finworker://source/".length);
         const abs = safePath(relPath);
         if (!abs) throw new Error("Invalid path");
         const text = await fs.readFile(abs, "utf-8");
@@ -259,19 +259,19 @@ export function createServer(): Server {
       {
         name: "list_tools",
         description:
-          "List all FinClaw agent tools (BashTool, FileReadTool, etc.) with their source files.",
+          "List all FinWorker agent tools (BashTool, FileReadTool, etc.) with their source files.",
         inputSchema: { type: "object" as const, properties: {} },
       },
       {
         name: "list_commands",
         description:
-          "List all FinClaw slash commands (/commit, /review, /mcp, etc.) with their source files.",
+          "List all FinWorker slash commands (/commit, /review, /mcp, etc.) with their source files.",
         inputSchema: { type: "object" as const, properties: {} },
       },
       {
         name: "get_tool_source",
         description:
-          "Read the full source code of a specific FinClaw tool implementation.",
+          "Read the full source code of a specific FinWorker tool implementation.",
         inputSchema: {
           type: "object" as const,
           properties: {
@@ -291,7 +291,7 @@ export function createServer(): Server {
       {
         name: "get_command_source",
         description:
-          "Read the source code of a specific FinClaw slash command.",
+          "Read the source code of a specific FinWorker slash command.",
         inputSchema: {
           type: "object" as const,
           properties: {
@@ -310,7 +310,7 @@ export function createServer(): Server {
       {
         name: "read_source_file",
         description:
-          "Read any source file from the FinClaw src/ directory by relative path.",
+          "Read any source file from the FinWorker src/ directory by relative path.",
         inputSchema: {
           type: "object" as const,
           properties: {
@@ -333,7 +333,7 @@ export function createServer(): Server {
       {
         name: "search_source",
         description:
-          "Search for a regex pattern across the FinClaw source. Returns matching lines with paths and line numbers.",
+          "Search for a regex pattern across the FinWorker source. Returns matching lines with paths and line numbers.",
         inputSchema: {
           type: "object" as const,
           properties: {
@@ -370,7 +370,7 @@ export function createServer(): Server {
       {
         name: "get_architecture",
         description:
-          "Get a high-level architecture overview of FinClaw.",
+          "Get a high-level architecture overview of FinWorker.",
         inputSchema: { type: "object" as const, properties: {} },
       },
     ],
@@ -606,7 +606,7 @@ export function createServer(): Server {
           const tools = await getToolList();
           const commands = await getCommandList();
 
-          const overview = `# FinClaw Architecture Overview
+          const overview = `# FinWorker Architecture Overview
 
 ## Source Root
 ${SRC_ROOT}
@@ -654,7 +654,7 @@ ${commands.map((c) => `- **${c.name}** ${c.isDirectory ? "(directory)" : "(file)
       {
         name: "explain_tool",
         description:
-          "Explain how a specific FinClaw tool works, including its input schema, permissions, and execution flow.",
+          "Explain how a specific FinWorker tool works, including its input schema, permissions, and execution flow.",
         arguments: [
           {
             name: "toolName",
@@ -665,7 +665,7 @@ ${commands.map((c) => `- **${c.name}** ${c.isDirectory ? "(directory)" : "(file)
       },
       {
         name: "explain_command",
-        description: "Explain how a specific FinClaw slash command works.",
+        description: "Explain how a specific FinWorker slash command works.",
         arguments: [
           {
             name: "commandName",
@@ -677,12 +677,12 @@ ${commands.map((c) => `- **${c.name}** ${c.isDirectory ? "(directory)" : "(file)
       {
         name: "architecture_overview",
         description:
-          "Get a guided tour of the FinClaw architecture with explanations of each subsystem.",
+          "Get a guided tour of the FinWorker architecture with explanations of each subsystem.",
       },
       {
         name: "how_does_it_work",
         description:
-          "Explain how a specific feature or subsystem of FinClaw works.",
+          "Explain how a specific feature or subsystem of FinWorker works.",
         arguments: [
           {
             name: "feature",
@@ -695,7 +695,7 @@ ${commands.map((c) => `- **${c.name}** ${c.isDirectory ? "(directory)" : "(file)
       {
         name: "compare_tools",
         description:
-          "Compare two FinClaw tools side by side — purpose, inputs, permissions, implementation.",
+          "Compare two FinWorker tools side by side — purpose, inputs, permissions, implementation.",
         arguments: [
           { name: "tool1", description: "First tool name", required: true },
           { name: "tool2", description: "Second tool name", required: true },
@@ -734,7 +734,7 @@ ${commands.map((c) => `- **${c.name}** ${c.isDirectory ? "(directory)" : "(file)
                 role: "user" as const,
                 content: {
                   type: "text" as const,
-                  text: `Analyze and explain this FinClaw tool implementation. Cover:\n1. Purpose\n2. Input Schema\n3. Permissions\n4. Execution Flow\n5. Output\n6. Safety characteristics\n\nFiles in tools/${toolName}/: ${files.join(", ")}\n\nMain source (${mainFile ?? "not found"}):\n\`\`\`typescript\n${source}\n\`\`\``,
+                  text: `Analyze and explain this FinWorker tool implementation. Cover:\n1. Purpose\n2. Input Schema\n3. Permissions\n4. Execution Flow\n5. Output\n6. Safety characteristics\n\nFiles in tools/${toolName}/: ${files.join(", ")}\n\nMain source (${mainFile ?? "not found"}):\n\`\`\`typescript\n${source}\n\`\`\``,
                 },
               },
             ],
@@ -790,7 +790,7 @@ ${commands.map((c) => `- **${c.name}** ${c.isDirectory ? "(directory)" : "(file)
                 role: "user" as const,
                 content: {
                   type: "text" as const,
-                  text: `Analyze and explain this FinClaw slash command. Cover:\n1. Purpose\n2. Type (prompt vs action)\n3. Allowed Tools\n4. Arguments\n5. Implementation\n\nFiles: ${fileList}\n\nSource:\n\`\`\`typescript\n${source}\n\`\`\``,
+                  text: `Analyze and explain this FinWorker slash command. Cover:\n1. Purpose\n2. Type (prompt vs action)\n3. Allowed Tools\n4. Arguments\n5. Implementation\n\nFiles: ${fileList}\n\nSource:\n\`\`\`typescript\n${source}\n\`\`\``,
                 },
               },
             ],
@@ -809,13 +809,13 @@ ${commands.map((c) => `- **${c.name}** ${c.isDirectory ? "(directory)" : "(file)
           const tools = await getToolList();
           const commands = await getCommandList();
           return {
-            description: "Architecture overview of FinClaw",
+            description: "Architecture overview of FinWorker",
             messages: [
               {
                 role: "user" as const,
                 content: {
                   type: "text" as const,
-                  text: `Give a comprehensive guided tour of the FinClaw architecture.\n\n## README\n${readme}\n\n## src/ entries\n${topLevel.join("\n")}\n\n## Tools (${tools.length})\n${tools.map((t) => `- ${t.name}: ${t.files.join(", ")}`).join("\n")}\n\n## Commands (${commands.length})\n${commands.map((c) => `- ${c.name} ${c.isDirectory ? "(dir)" : "(file)"}`).join("\n")}`,
+                  text: `Give a comprehensive guided tour of the FinWorker architecture.\n\n## README\n${readme}\n\n## src/ entries\n${topLevel.join("\n")}\n\n## Tools (${tools.length})\n${tools.map((t) => `- ${t.name}: ${t.files.join(", ")}`).join("\n")}\n\n## Commands (${commands.length})\n${commands.map((c) => `- ${c.name} ${c.isDirectory ? "(dir)" : "(file)"}`).join("\n")}`,
                 },
               },
             ],
@@ -879,13 +879,13 @@ ${commands.map((c) => `- **${c.name}** ${c.isDirectory ? "(directory)" : "(file)
             }
           }
           return {
-            description: `How ${feature} works in FinClaw`,
+            description: `How ${feature} works in FinWorker`,
             messages: [
               {
                 role: "user" as const,
                 content: {
                   type: "text" as const,
-                  text: `Explain how "${feature}" works in the FinClaw CLI.\n${contextFiles || "(No specific files mapped — use search_source and read_source_file to find relevant code.)"}`,
+                  text: `Explain how "${feature}" works in the FinWorker CLI.\n${contextFiles || "(No specific files mapped — use search_source and read_source_file to find relevant code.)"}`,
                 },
               },
             ],
@@ -926,7 +926,7 @@ ${commands.map((c) => `- **${c.name}** ${c.isDirectory ? "(directory)" : "(file)
                 role: "user" as const,
                 content: {
                   type: "text" as const,
-                  text: `Compare these two FinClaw tools:\n\n## ${tool1}\n\`\`\`typescript\n${sources[0]}\n\`\`\`\n\n## ${tool2}\n\`\`\`typescript\n${sources[1]}\n\`\`\``,
+                  text: `Compare these two FinWorker tools:\n\n## ${tool1}\n\`\`\`typescript\n${sources[0]}\n\`\`\`\n\n## ${tool2}\n\`\`\`typescript\n${sources[1]}\n\`\`\``,
                 },
               },
             ],
@@ -946,10 +946,10 @@ ${commands.map((c) => `- **${c.name}** ${c.isDirectory ? "(directory)" : "(file)
 export async function validateSrcRoot(): Promise<void> {
   if (!(await dirExists(SRC_ROOT))) {
     console.error(
-      `Error: FinClaw src/ directory not found at ${SRC_ROOT}`
+      `Error: FinWorker src/ directory not found at ${SRC_ROOT}`
     );
     console.error(
-      "Set FINCLAW_SRC_ROOT environment variable to the src/ directory path."
+      "Set FINWORKER_SRC_ROOT environment variable to the src/ directory path."
     );
     process.exit(1);
   }

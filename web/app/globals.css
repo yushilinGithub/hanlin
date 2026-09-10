@@ -18,10 +18,10 @@
     --color-text-secondary: #a1a1aa;
     --color-text-muted: #52525b;
 
-    /* Accent (brand purple) */
-    --color-accent: #8b5cf6;
-    --color-accent-hover: #7c3aed;
-    --color-accent-active: #6d28d9;
+    /* Accent (FinWorker blue) */
+    --color-accent: #258bff;
+    --color-accent-hover: #1a73e8;
+    --color-accent-active: #155fc0;
     --color-accent-foreground: #ffffff;
 
     /* Borders */
@@ -40,7 +40,7 @@
 
     /* Code */
     --color-code-bg: #1f1f23;
-    --color-code-text: #a78bfa;
+    --color-code-text: #a5cfff;
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
@@ -66,7 +66,7 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 3.7% 15.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 263.4 70% 50.4%;
+    --primary: 211.9 100% 57.3%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
@@ -78,7 +78,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 263.4 70% 50.4%;
+    --ring: 211.9 100% 57.3%;
   }
 
   /* Light theme override */
@@ -91,9 +91,9 @@
     --color-text-secondary: #52525b;
     --color-text-muted: #a1a1aa;
 
-    --color-accent: #7c3aed;
-    --color-accent-hover: #6d28d9;
-    --color-accent-active: #5b21b6;
+    --color-accent: #1a73e8;
+    --color-accent-hover: #155fc0;
+    --color-accent-active: #134b99;
     --color-accent-foreground: #ffffff;
 
     --color-border: #e4e4e7;
@@ -109,7 +109,7 @@
     --color-info-bg: rgba(37, 99, 235, 0.1);
 
     --color-code-bg: #f4f4f5;
-    --color-code-text: #7c3aed;
+    --color-code-text: #155fc0;
 
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
@@ -121,7 +121,7 @@
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 262.1 83.3% 57.8%;
+    --primary: 214.1 81.7% 50.6%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
@@ -133,7 +133,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 262.1 83.3% 57.8%;
+    --ring: 214.1 81.7% 50.6%;
   }
 
   *, *::before, *::after {

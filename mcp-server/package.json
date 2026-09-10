@@ -1,20 +1,20 @@
 {
-  "name": "finclaw-explorer",
+  "name": "finworker-explorer",
   "version": "1.1.0",
-  "mcpName": "io.github.finclaw/finclaw-explorer",
-  "description": "MCP server for exploring the FinClaw codebase. STDIO, HTTP, and SSE transports.",
+  "mcpName": "io.github.yushilinGithub/finworker-explorer",
+  "description": "MCP server for exploring the FinWorker codebase. STDIO, HTTP, and SSE transports.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/finclaw/finclaw.git"
+    "url": "https://github.com/yushilinGithub/finWorker.git"
   },
-  "homepage": "https://github.com/finclaw/finclaw#readme",
+  "homepage": "https://github.com/yushilinGithub/finWorker#readme",
   "bugs": {
-    "url": "https://github.com/finclaw/finclaw/issues"
+    "url": "https://github.com/yushilinGithub/finWorker/issues"
   },
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "finclaw-explorer": "dist/index.js"
+    "finworker-explorer": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",

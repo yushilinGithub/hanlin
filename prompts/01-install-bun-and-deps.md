@@ -2,7 +2,7 @@
 
 ## Context
 
-You are working in the FinClaw repository (`/workspaces/finclaw`), which contains the source code of FinClaw CLI. It's a TypeScript/TSX project that uses **Bun** as its runtime (not Node.js). The `package.json` specifies `"engines": { "bun": ">=1.1.0" }`.
+You are working in the FinWorker repository (`/workspaces/finworker`), which contains the source code of FinWorker CLI. It's a TypeScript/TSX project that uses **Bun** as its runtime (not Node.js). The `package.json` specifies `"engines": { "bun": ">=1.1.0" }`.
 
 There is no `bun.lockb` lockfile yet.
 

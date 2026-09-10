@@ -8,7 +8,7 @@ import { getLayoutMode, calculateLayoutDimensions, calculateOptimalLeftWidth, fo
 import { truncate } from '../../utils/format.js';
 import { getDisplayPath } from '../../utils/file.js';
 import { Clawd } from './Clawd.js';
-import { FinClawWordmark } from './FinClawWordmark.js';
+import { FinWorkerWordmark } from './FinWorkerWordmark.js';
 import { FeedColumn } from './FeedColumn.js';
 import { createRecentActivityFeed, createWhatsNewFeed, createProjectOnboardingFeed, createGuestPassesFeed } from './feedConfigs.js';
 import { getGlobalConfig, saveGlobalConfig } from 'src/utils/config.js';
@@ -249,8 +249,8 @@ export function LogoV2() {
   }
   const layoutMode = getLayoutMode(columns);
   const userTheme = resolveThemeSetting(getGlobalConfig().theme);
-  const borderTitle = ` ${color("claude", userTheme)("FinClaw")} ${color("inactive", userTheme)(`v${version}`)} `;
-  const compactBorderTitle = color("claude", userTheme)(" FinClaw ");
+  const borderTitle = ` ${color("claude", userTheme)("FinWorker")} ${color("inactive", userTheme)(`v${version}`)} `;
+  const compactBorderTitle = color("claude", userTheme)(" FinWorker ");
   if (layoutMode === "compact") {
     let welcomeMessage = formatWelcomeMessage(username);
     if (stringWidth(welcomeMessage) > columns - 4) {
@@ -327,7 +327,7 @@ export function LogoV2() {
       t18 = $[42];
       t19 = $[43];
     }
-    return <><OffscreenFreeze><FinClawWordmark welcomeMessage={welcomeMessage} version={version} modelDisplayName={modelDisplayName} billingType={billingType} cwdLine={agentName ? `@${agentName} · ${truncatedCwd}` : truncatedCwd} columns={columns} activities={activities} /></OffscreenFreeze>{t14}{t15}{t16}{t17}{t18}{t19}</>;
+    return <><OffscreenFreeze><FinWorkerWordmark welcomeMessage={welcomeMessage} version={version} modelDisplayName={modelDisplayName} billingType={billingType} cwdLine={agentName ? `@${agentName} · ${truncatedCwd}` : truncatedCwd} columns={columns} activities={activities} /></OffscreenFreeze>{t14}{t15}{t16}{t17}{t18}{t19}</>;
   }
   const welcomeMessage_0 = formatWelcomeMessage(username);
   const modelLine = !process.env.IS_DEMO && config.oauthAccount?.organizationName ? `${modelDisplayName} · ${billingType} · ${config.oauthAccount.organizationName}` : `${modelDisplayName} · ${billingType}`;
@@ -432,9 +432,9 @@ export function LogoV2() {
   } else {
     t26 = $[67];
   }
-  // FinClaw start screen. Replaces the bordered two-column logo box; the
+  // FinWorker start screen. Replaces the bordered two-column logo box; the
   // notices below (debug, tmux, announcements, sandbox) are untouched.
-  const t27 = <FinClawWordmark welcomeMessage={welcomeMessage_0} version={version} modelDisplayName={modelDisplayName} billingType={billingType} organizationName={!process.env.IS_DEMO ? config.oauthAccount?.organizationName : undefined} cwdLine={cwdLine} columns={columns} activities={activities} />;
+  const t27 = <FinWorkerWordmark welcomeMessage={welcomeMessage_0} version={version} modelDisplayName={modelDisplayName} billingType={billingType} organizationName={!process.env.IS_DEMO ? config.oauthAccount?.organizationName : undefined} cwdLine={cwdLine} columns={columns} activities={activities} />;
   let t28;
   if ($[72] !== T0 || $[73] !== t27) {
     t28 = <T0>{t27}</T0>;

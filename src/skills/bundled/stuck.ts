@@ -3,13 +3,13 @@ import { registerBundledSkill } from '../bundledSkills.js'
 // Prompt text contains `ps` commands as instructions for Claude to run,
 // not commands this file executes.
 // eslint-disable-next-line custom-rules/no-direct-ps-commands
-const STUCK_PROMPT = `# /stuck — diagnose frozen/slow FinClaw sessions
+const STUCK_PROMPT = `# /stuck — diagnose frozen/slow FinWorker sessions
 
-The user thinks another FinClaw session on this machine is frozen, stuck, or very slow. Investigate and post a report.
+The user thinks another FinWorker session on this machine is frozen, stuck, or very slow. Investigate and post a report.
 
 ## What to look for
 
-Scan for other FinClaw processes (excluding the current one — PID is in \`process.pid\` but for shell commands just exclude the PID you see running this prompt). Process names are typically \`finclaw\` (installed) or \`cli\` (native dev build).
+Scan for other FinWorker processes (excluding the current one — PID is in \`process.pid\` but for shell commands just exclude the PID you see running this prompt). Process names are typically \`finworker\` (installed) or \`cli\` (native dev build).
 
 Signs of a stuck session:
 - **High CPU (≥90%) sustained** — likely an infinite loop. Sample twice, 1-2s apart, to confirm it's not a transient spike.

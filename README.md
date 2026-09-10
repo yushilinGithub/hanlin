@@ -91,7 +91,7 @@ Add the server to your `mcp.json` configuration:
       "command": "node",
       "args": ["/path/to/finWorker/mcp-server/dist/index.js"],
       "env": {
-        "FINCLAW_SRC_ROOT": "/path/to/finWorker/src"
+        "FINWORKER_SRC_ROOT": "/path/to/finWorker/src"
       }
     }
   }

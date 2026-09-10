@@ -150,13 +150,13 @@ const buildOptions: esbuild.BuildOptions = {
   // process.env.USER_TYPE — eliminates 'ant' (Anthropic-internal) code branches
   define: {
     'MACRO.VERSION': JSON.stringify(version),
-    'MACRO.PACKAGE_URL': JSON.stringify('finclaw'),
+    'MACRO.PACKAGE_URL': JSON.stringify('finworker'),
     'MACRO.ISSUES_EXPLAINER': JSON.stringify(
-      'report issues at https://github.com/finclaw/finclaw/issues'
+      'report issues at https://github.com/yushilinGithub/finWorker/issues'
     ),
     'MACRO.NATIVE_PACKAGE_URL': 'undefined',
     'MACRO.FEEDBACK_CHANNEL': JSON.stringify(
-      'https://github.com/finclaw/finclaw/issues'
+      'https://github.com/yushilinGithub/finWorker/issues'
     ),
     'MACRO.BUILD_TIME': JSON.stringify(new Date().toISOString()),
     'MACRO.VERSION_CHANGELOG': JSON.stringify(''),

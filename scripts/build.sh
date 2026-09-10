@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────
-# build.sh — Minimal build / check script for FinClaw
+# build.sh — Minimal build / check script for FinWorker
 # ─────────────────────────────────────────────────────────────
 # Usage:
 #   ./scripts/build.sh          # install + typecheck + lint

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * STDIO entrypoint — for local use with FinClaw, Claude Desktop, etc.
+ * STDIO entrypoint — for local use with FinWorker, Claude Desktop, etc.
  *
  * Usage:
  *   node dist/index.js
- *   FINCLAW_SRC_ROOT=/path/to/src node dist/index.js
+ *   FINWORKER_SRC_ROOT=/path/to/src node dist/index.js
  */
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -15,7 +15,7 @@ async function main() {
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error(`FinClaw Explorer MCP (stdio) started — src: ${SRC_ROOT}`);
+  console.error(`FinWorker Explorer MCP (stdio) started — src: ${SRC_ROOT}`);
 }
 
 main().catch((err) => {

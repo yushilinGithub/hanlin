@@ -19,8 +19,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FinClaw",
-  description: "FinClaw — AI-powered development assistant",
+  title: "FinWorker",
+  description: "FinWorker — AI-powered development assistant",
   icons: {
     icon: "/favicon.ico",
   },

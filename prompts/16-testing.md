@@ -2,7 +2,7 @@
 
 ## Context
 
-You are working in the FinClaw project repository. The source needs test infrastructure and smoke tests for core subsystems.
+You are working in the FinWorker project repository. The source needs test infrastructure and smoke tests for core subsystems.
 
 ## Task
 
