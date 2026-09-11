@@ -1,6 +1,6 @@
 import { cpSync, existsSync } from 'fs'
 import { homedir } from 'os'
-import { basename, join } from 'path'
+import { dirname, join } from 'path'
 import { getGlobalClaudeFile } from './env.js'
 import { getClaudeConfigHomeDir } from './envUtils.js'
 
@@ -53,18 +53,24 @@ export function ensureConfigHomeSeeded(): void {
       return
     }
 
+    // Said before the copy, not after: this is synchronous and a long-lived Claude Code
+    // install can be several GB, so the CLI would otherwise sit silent with no explanation.
+    // biome-ignore lint/suspicious/noConsole: runs before the UI exists
+    console.error(`finWorker: first run — copying ${source} to ${target}…`)
+
     // cpSync copies file modes, so .credentials.json keeps its 0600.
     cpSync(source, target, {
       recursive: true,
       preserveTimestamps: true,
-      filter: src => !EXCLUDED_FROM_SEED.has(basename(src)),
+      // Top level only. Matching on basename at any depth would also drop an unrelated
+      // nested directory that happens to be called `ide` or `daemon` — a plugin's, say.
+      filter: src => dirname(src) !== source || !EXCLUDED_FROM_SEED.has(src.slice(source.length + 1)),
     })
     seedGlobalConfigFile()
 
     // biome-ignore lint/suspicious/noConsole: runs before the UI exists
     console.error(
-      `finWorker: created ${target} from ${source}. The two are independent from now on; ` +
-        `${source} is no longer read.`,
+      `finWorker: done. The two are independent from now on; ${source} is no longer read.`,
     )
   } catch {
     // A failed seed means finWorker starts with default settings — worse than inheriting

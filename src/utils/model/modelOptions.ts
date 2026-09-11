@@ -620,21 +620,38 @@ function getAnthropicModelOptions(fastMode = false): ModelOption[] {
   }
 }
 
+/**
+ * Selectable models.
+ *
+ * Callers other than the picker — the ConfigTool's `model` setting, its prompt, and the
+ * `supported_models` control-protocol payload — treat every entry as a writable model id,
+ * so this list must contain only real ones. Catalog sections and the browse row live in
+ * `getPickerModelOptions` instead.
+ */
 export function getModelOptions(fastMode = false): ModelOption[] {
-  const options = getAnthropicModelOptions(fastMode)
+  return getAnthropicModelOptions(fastMode)
+}
+
+/**
+ * The `/model` list: selectable models, then a section per reachable provider, then a row
+ * that opens the full catalog.
+ *
+ * Only `ModelPicker` should call this — the section headers are `disabled` rows and the
+ * browse row is a sentinel, neither of which is a model id.
+ */
+export function getPickerModelOptions(fastMode = false): ModelOption[] {
   const catalog = filterModelOptionsByAllowlist(getReachableProviderOptions())
 
   // Every provider models.dev knows about is reachable through the browse step, so the
   // inline list stays short without hiding anything.
-  return dropEmptySections([
-    ...options,
-    ...catalog,
+  return [
+    ...dropEmptySections([...getAnthropicModelOptions(fastMode), ...catalog]),
     {
       value: BROWSE_PROVIDERS_VALUE,
       label: 'Browse all providers…',
       description: 'Pick from every provider and model in the catalog',
     },
-  ])
+  ]
 }
 
 /**
@@ -662,8 +679,12 @@ function filterModelOptionsByAllowlist(options: ModelOption[]): ModelOption[] {
 function dropEmptySections(options: ModelOption[]): ModelOption[] {
   return options.filter((opt, i) => {
     if (opt.disabled !== true) return true
-    const next = options[i + 1]
-    return next !== undefined && next.disabled !== true
+    // Look past any run of consecutive headers: a header is empty only when nothing
+    // selectable follows it before the next header or the end of the list.
+    for (let j = i + 1; j < options.length; j++) {
+      if (options[j]!.disabled !== true) return true
+    }
+    return false
   })
 }
 

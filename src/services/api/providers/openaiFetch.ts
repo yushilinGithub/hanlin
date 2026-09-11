@@ -57,11 +57,17 @@ function estimateTokens(body: AnyRecord): number {
 }
 
 function buildHeaders(provider: ResolvedProvider): Record<string, string> {
-  const headers: Record<string, string> = {
-    'content-type': 'application/json',
-    ...provider.headers,
+  const headers: Record<string, string> = { 'content-type': 'application/json' }
+  // Lowercase incoming names before merging: `Headers` folds case, so a configured
+  // "Authorization" alongside the derived "authorization" would be sent as one
+  // comma-joined value that every provider rejects.
+  for (const [name, value] of Object.entries(provider.headers ?? {})) {
+    headers[name.toLowerCase()] = value
   }
-  if (provider.apiKey) headers.authorization = `Bearer ${provider.apiKey}`
+  // An explicitly configured authorization header wins over the derived bearer token.
+  if (provider.apiKey && !headers.authorization) {
+    headers.authorization = `Bearer ${provider.apiKey}`
+  }
   return headers
 }
 

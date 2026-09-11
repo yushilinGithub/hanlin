@@ -52,21 +52,22 @@ export function splitProviderModel(value: string): { provider?: string; model: s
   return { provider: prefix, model: rest }
 }
 
-// Reading the catalog parses a multi-megabyte file, and this is consulted from
-// getAPIProvider() on hot paths. Memoized per id; a model string with no slash never
-// reaches here at all, so the Anthropic default never pays for it.
-const knownProviderIds = new Map<string, boolean>()
+// Positives only. Caching a negative would be permanent for the session, and the catalog
+// starts empty on a cold install while its refresh runs in the background — an id probed
+// in that window would stay "unknown", so `alibaba-cn/qwen3-max` would never split and the
+// whole string would be sent to Anthropic as a model id. Re-checking is cheap: getCatalog()
+// caches the parsed payload, so a miss is a map lookup.
+const knownProviderIds = new Set<string>()
 
 function isKnownProviderId(id: string): boolean {
-  const cached = knownProviderIds.get(id)
-  if (cached !== undefined) return cached
+  if (knownProviderIds.has(id)) return true
   const known =
     Boolean(getProviderProfile(id)) ||
     Boolean(settings().providers?.[id]) ||
     // Any models.dev provider counts, so `alibaba-cn/deepseek-v4-pro` resolves without
     // finWorker having to hardcode every provider that exists.
     Boolean(getCatalogProvider(id))
-  knownProviderIds.set(id, known)
+  if (known) knownProviderIds.add(id)
   return known
 }
 
@@ -94,9 +95,22 @@ export function getConfiguredProviderId(): string | undefined {
   if (model) {
     const { provider } = splitProviderModel(model)
     if (provider) return provider
+    // A bare Claude id is an explicit choice of Anthropic. Without this, a `provider` in
+    // settings.json would hijack it: picking "Sonnet 4.6" from the inline list would send
+    // a Claude model id to, say, api.deepseek.com and fail with an opaque 400.
+    if (isAnthropicModelId(model)) return undefined
   }
 
   return settings().provider?.trim() || undefined
+}
+
+/** Aliases and canonical ids that only Anthropic serves. */
+function isAnthropicModelId(model: string): boolean {
+  const normalized = model.trim().toLowerCase().replace(/\[[12]m\]$/, '')
+  return (
+    normalized.startsWith('claude-') ||
+    ['sonnet', 'opus', 'haiku', 'best', 'opusplan'].includes(normalized)
+  )
 }
 
 // getAPIProvider() calls in here, and resolving an id reads settings — which can itself

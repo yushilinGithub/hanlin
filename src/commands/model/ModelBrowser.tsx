@@ -20,12 +20,14 @@ import type { EffortLevel } from '../../utils/effort.js'
 import { isBilledAsExtraUsage } from '../../utils/extraUsage.js'
 import {
   clearFastModeCooldown,
+  isFastModeAvailable,
   isFastModeEnabled,
   isFastModeSupportedByModel,
 } from '../../utils/fastMode.js'
 import {
   getDefaultMainLoopModelSetting,
   isOpus1mMergeEnabled,
+  type ModelSetting,
   renderDefaultModelSetting,
 } from '../../utils/model/model.js'
 import {
@@ -72,6 +74,9 @@ export function ModelBrowser({ onDone }: Props): React.ReactNode {
   const [step, setStep] = useState<Step>({ kind: 'models' })
   // useAppState is untyped compiled output, so the selector result needs narrowing here.
   const mainLoopModel = useAppState((s: AppState) => s.mainLoopModel) as string | null
+  const mainLoopModelForSession = useAppState(
+    (s: AppState) => s.mainLoopModelForSession,
+  ) as ModelSetting
   const isFastMode = (useAppState((s: AppState) => s.fastMode) as boolean | undefined) ?? false
   const setAppState = useSetAppState()
 
@@ -93,7 +98,14 @@ export function ModelBrowser({ onDone }: Props): React.ReactNode {
         if (!isFastModeSupportedByModel(model) && isFastMode) {
           setAppState(prev => ({ ...prev, fastMode: false }))
           fastModeToggledOn = false
-        } else if (isFastModeSupportedByModel(model) && isFastMode) {
+        } else if (
+          isFastModeSupportedByModel(model) &&
+          // Without this, a free-plan user is told "Fast mode ON" and billed as extra
+          // usage for a mode they cannot actually use — isFastModeEnabled() is only the
+          // kill-switch env var, not entitlement.
+          isFastModeAvailable() &&
+          isFastMode
+        ) {
           message += ' · Fast mode ON'
           fastModeToggledOn = true
         }
@@ -191,12 +203,22 @@ export function ModelBrowser({ onDone }: Props): React.ReactNode {
     )
   }
 
+  // sessionModel drives the "set by plan mode" warning in ModelPicker; without it a user
+  // silently clobbers a session override they were never shown.
+  const showFastModeNotice =
+    isFastModeEnabled() &&
+    isFastMode &&
+    isFastModeSupportedByModel(mainLoopModel) &&
+    isFastModeAvailable()
+
   return (
     <ModelPicker
       initial={mainLoopModel}
+      sessionModel={mainLoopModelForSession}
       onSelect={handlePickerSelect}
       onCancel={handleCancel}
       isStandaloneCommand
+      showFastModeNotice={showFastModeNotice}
     />
   )
 }

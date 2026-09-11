@@ -208,11 +208,14 @@ export class AnthropicEventBuilder {
     this.textIndex = null
     this.closeBlock(this.reasoningIndex, out)
     this.reasoningIndex = null
+    const hadToolCalls = this.toolBlocks.size > 0
     for (const index of this.toolBlocks.values()) this.closeBlock(index, out)
     this.toolBlocks.clear()
 
-    // A tool call is the real stop reason even when the provider reported `stop`.
-    const stopReason = toStopReason(this.finishReason)
+    // A turn that emitted tool_use blocks stopped for a tool call, whatever the provider
+    // called it — several report `stop` alongside tool calls, which would otherwise
+    // produce a message whose stop_reason contradicts its own content.
+    const stopReason = hadToolCalls ? 'tool_use' : toStopReason(this.finishReason)
     out.push(
       sse('message_delta', {
         type: 'message_delta',
@@ -255,13 +258,14 @@ export function toAnthropicMessage(completion: AnyRecord, model: string): AnyRec
     })
   }
 
+  const hadToolCalls = content.some(block => block.type === 'tool_use')
   return {
     id: completion.id ?? `msg_${randomUUID().replace(/-/g, '')}`,
     type: 'message',
     role: 'assistant',
     model: completion.model ?? model,
     content,
-    stop_reason: toStopReason(choice?.finish_reason),
+    stop_reason: hadToolCalls ? 'tool_use' : toStopReason(choice?.finish_reason),
     stop_sequence: null,
     usage: toAnthropicUsage(completion.usage),
   }
