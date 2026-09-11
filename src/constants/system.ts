@@ -10,11 +10,17 @@ import { getWorkload } from '../utils/workloadContext.js'
 const DEFAULT_PREFIX = `You are Claude Code, Anthropic's official CLI for Claude.`
 const AGENT_SDK_CLAUDE_CODE_PRESET_PREFIX = `You are Claude Code, Anthropic's official CLI for Claude, running within the Claude Agent SDK.`
 const AGENT_SDK_PREFIX = `You are a Claude agent, built on Anthropic's Claude Agent SDK.`
+// Used when a non-Anthropic provider serves the model. The Claude prefixes above are not
+// merely branding — they are the cache key for Anthropic's server-side prefix cache, so
+// they must stay byte-identical there — but telling an open-weight model it is Claude is
+// simply false, and the model may act on it.
+const FINWORKER_PREFIX = `You are FinWorker, a CLI agent for software engineering and financial analysis.`
 
 const CLI_SYSPROMPT_PREFIX_VALUES = [
   DEFAULT_PREFIX,
   AGENT_SDK_CLAUDE_CODE_PRESET_PREFIX,
   AGENT_SDK_PREFIX,
+  FINWORKER_PREFIX,
 ] as const
 
 export type CLISyspromptPrefix = (typeof CLI_SYSPROMPT_PREFIX_VALUES)[number]
@@ -32,6 +38,9 @@ export function getCLISyspromptPrefix(options?: {
   hasAppendSystemPrompt: boolean
 }): CLISyspromptPrefix {
   const apiProvider = getAPIProvider()
+  if (apiProvider === 'custom') {
+    return FINWORKER_PREFIX
+  }
   if (apiProvider === 'vertex') {
     return DEFAULT_PREFIX
   }
@@ -50,6 +59,11 @@ export function getCLISyspromptPrefix(options?: {
  * Enabled by default, can be disabled via env var or GrowthBook killswitch.
  */
 function isAttributionHeaderEnabled(): boolean {
+  // An Anthropic billing header is meaningless to a third-party provider: it only leaks
+  // the client version and entrypoint, and costs tokens at the very front of the prompt.
+  if (getAPIProvider() === 'custom') {
+    return false
+  }
   if (isEnvDefinedFalsy(process.env.CLAUDE_CODE_ATTRIBUTION_HEADER)) {
     return false
   }
