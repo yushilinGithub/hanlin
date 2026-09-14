@@ -682,7 +682,10 @@ function dropEmptySections(options: ModelOption[]): ModelOption[] {
     // Look past any run of consecutive headers: a header is empty only when nothing
     // selectable follows it before the next header or the end of the list.
     for (let j = i + 1; j < options.length; j++) {
-      if (options[j]!.disabled !== true) return true
+      // Stop at the next header: a row under a *later* section says nothing about
+      // whether this one has any models left after the allowlist filter.
+      if (options[j]!.disabled === true) break
+      return true
     }
     return false
   })

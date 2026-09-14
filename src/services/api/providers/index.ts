@@ -12,6 +12,7 @@ type ProviderSettings = {
   baseURL?: string
   apiKey?: string
   apiKeyEnv?: string
+  apiKeyOptional?: boolean
   headers?: Record<string, string>
   name?: string
   toolSchema?: 'openai' | 'restricted'
@@ -40,8 +41,22 @@ export function getCatalogIdFor(providerId: string): string {
   return getProviderProfile(providerId)?.catalogId ?? providerId
 }
 
+/**
+ * A provider named outright, rather than inferred from a model prefix.
+ *
+ * When one is set it owns routing: OpenRouter and Together name models `vendor/model`
+ * (`openai/gpt-4o`), and inferring from that prefix would send the request to the vendor
+ * instead — with the configured provider's API key.
+ */
+function explicitProviderId(): string | undefined {
+  return process.env.FINWORKER_PROVIDER?.trim() || settings().provider?.trim() || undefined
+}
+
 /** Split `provider/model` when the prefix names a provider we know about. */
 export function splitProviderModel(value: string): { provider?: string; model: string } {
+  // With a provider named outright, the whole string is the model id — `openai/gpt-4o`
+  // is what OpenRouter expects on the wire, prefix included.
+  if (explicitProviderId()) return { model: value }
   const slash = value.indexOf('/')
   if (slash <= 0) return { model: value }
   const prefix = value.slice(0, slash)
@@ -78,8 +93,8 @@ function isKnownProviderId(id: string): boolean {
  * then `provider` in settings.json.
  */
 export function getConfiguredProviderId(): string | undefined {
-  const fromEnv = process.env.FINWORKER_PROVIDER?.trim()
-  if (fromEnv) return fromEnv
+  const explicit = explicitProviderId()
+  if (explicit) return explicit
 
   // The /model picker writes "provider/model" into the session override, so a mid-session
   // switch has to be visible here — not just whatever was configured at startup.
@@ -101,7 +116,7 @@ export function getConfiguredProviderId(): string | undefined {
     if (isAnthropicModelId(model)) return undefined
   }
 
-  return settings().provider?.trim() || undefined
+  return undefined
 }
 
 /** Aliases and canonical ids that only Anthropic serves. */
@@ -142,11 +157,15 @@ export function getConfiguredModelLimits(
   // Explicit settings win; the catalog fills the gap so a model need not be hand-measured
   // to be metered correctly.
   const configured = settings().providers?.[id]?.models?.[split.model]
-  if (configured?.contextWindow || configured?.maxOutputTokens) return configured
-
   const limit = getCatalogProvider(getCatalogIdFor(id))?.models[split.model]?.limit
-  if (!limit) return undefined
-  return { contextWindow: limit.context, maxOutputTokens: limit.output }
+  if (!configured && !limit) return undefined
+
+  // Merged field by field, not whole: setting only maxOutputTokens must not discard the
+  // catalog's contextWindow and silently fall back to the Claude 200k default.
+  return {
+    contextWindow: configured?.contextWindow ?? limit?.context,
+    maxOutputTokens: configured?.maxOutputTokens ?? limit?.output,
+  }
 }
 
 /**
@@ -260,7 +279,9 @@ export function resolveProvider(): ResolvedProvider {
     protocol: builtin?.protocol ?? 'openai-chat',
     baseURL: config?.baseURL ?? builtin?.baseURL ?? catalog?.api,
     apiKeyEnv: builtin?.apiKeyEnv ?? catalog?.env,
-    apiKeyOptional: builtin?.apiKeyOptional,
+    // Settings can declare a keyless endpoint — self-hosted vLLM/SGLang/LM Studio, which
+    // is the case this layer exists to serve.
+    apiKeyOptional: config?.apiKeyOptional ?? builtin?.apiKeyOptional,
     headers: { ...builtin?.headers, ...config?.headers },
     toolSchema: config?.toolSchema ?? builtin?.toolSchema,
   }

@@ -59,6 +59,12 @@ export const ProviderSettingsSchema = lazySchema(() =>
         .string()
         .optional()
         .describe('Name of the environment variable holding the API key'),
+      apiKeyOptional: z
+        .boolean()
+        .optional()
+        .describe(
+          'Endpoint needs no credential (self-hosted vLLM, SGLang, LM Studio, Ollama)',
+        ),
       headers: z
         .record(z.string(), z.string())
         .optional()

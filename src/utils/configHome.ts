@@ -1,4 +1,4 @@
-import { cpSync, existsSync } from 'fs'
+import { cpSync, existsSync, renameSync, rmSync } from 'fs'
 import { homedir } from 'os'
 import { dirname, join } from 'path'
 import { getGlobalClaudeFile } from './env.js'
@@ -24,7 +24,9 @@ function legacyConfigHome(): string {
 }
 
 function legacyGlobalConfigFile(): string {
-  return join(homedir(), '.claude.json')
+  // Follows CLAUDE_CONFIG_DIR the same way Claude Code's own resolution does — with it
+  // set, the file lives beside that directory, not in the home directory.
+  return join(process.env.CLAUDE_CONFIG_DIR || homedir(), '.claude.json')
 }
 
 /**
@@ -58,23 +60,39 @@ export function ensureConfigHomeSeeded(): void {
     // biome-ignore lint/suspicious/noConsole: runs before the UI exists
     console.error(`finWorker: first run — copying ${source} to ${target}…`)
 
-    // cpSync copies file modes, so .credentials.json keeps its 0600.
-    cpSync(source, target, {
-      recursive: true,
-      preserveTimestamps: true,
-      // Top level only. Matching on basename at any depth would also drop an unrelated
-      // nested directory that happens to be called `ide` or `daemon` — a plugin's, say.
-      filter: src => dirname(src) !== source || !EXCLUDED_FROM_SEED.has(src.slice(source.length + 1)),
-    })
+    // Copied to a sibling and renamed into place. cpSync is not atomic, and a throw
+    // partway (unreadable file, dangling symlink, ENOSPC) would otherwise leave a
+    // half-populated ~/.finworker that the existsSync guard treats as finished — a
+    // silently truncated config that can never re-seed.
+    const staging = `${target}.seeding.${process.pid}`
+    rmSync(staging, { recursive: true, force: true })
+    try {
+      // cpSync copies file modes, so .credentials.json keeps its 0600.
+      cpSync(source, staging, {
+        recursive: true,
+        preserveTimestamps: true,
+        // Top level only. Matching on basename at any depth would also drop an unrelated
+        // nested directory that happens to be called `ide` or `daemon` — a plugin's, say.
+        filter: src =>
+          dirname(src) !== source || !EXCLUDED_FROM_SEED.has(src.slice(source.length + 1)),
+      })
+      renameSync(staging, target)
+    } catch (error) {
+      rmSync(staging, { recursive: true, force: true })
+      throw error
+    }
     seedGlobalConfigFile()
 
     // biome-ignore lint/suspicious/noConsole: runs before the UI exists
     console.error(
       `finWorker: done. The two are independent from now on; ${source} is no longer read.`,
     )
-  } catch {
+  } catch (error) {
     // A failed seed means finWorker starts with default settings — worse than inheriting
-    // them, but not a reason to refuse to launch.
+    // them, but not a reason to refuse to launch. Said out loud so it is not a silent
+    // downgrade, and the staging dir is gone so the next launch retries.
+    // biome-ignore lint/suspicious/noConsole: runs before the UI exists
+    console.error(`finWorker: could not seed config directory (${(error as Error).message}). Starting with defaults.`)
   }
 }
 

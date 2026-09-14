@@ -113,8 +113,10 @@ async function refresh(): Promise<void> {
     if (!response.ok) return
     const catalog = normalize(await response.json())
     if (Object.keys(catalog).length === 0) return
-    await writeCache(catalog)
+    // Held in memory before the write: a read-only HOME or a full disk must not throw
+    // away a fetch that already succeeded, or the picker shows no providers all session.
     cached = catalog
+    await writeCache(catalog)
   } catch (error) {
     // A missing catalog degrades the picker; it must never break a session.
     logError(error as Error)

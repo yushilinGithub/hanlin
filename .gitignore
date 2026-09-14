@@ -28,3 +28,7 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Captured API request dumps (contain device_id / account_uuid)
+finworker-request-*.json
+SYSTEM_PROMPT_RECONSTRUCTED.txt

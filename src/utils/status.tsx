@@ -13,8 +13,19 @@ import { getIdeClientName, type IDEExtensionInstallationStatus, isJetBrainsIde, 
 import { getClaudeAiUserDefaultModelDescription, modelDisplayString } from './model/model.js';
 import {
   getConfiguredProviderId,
-  getProviderProfile
+  getProviderProfile,
+  resolveProvider,
+  type ResolvedProvider
 } from '../services/api/providers/index.js';
+
+/** resolveProvider throws on misconfiguration; /status must still render. */
+function resolveProviderSafely(): ResolvedProvider | undefined {
+  try {
+    return resolveProvider();
+  } catch {
+    return undefined;
+  }
+}
 import { getAPIProvider } from './model/providers.js';
 import { getMTLSConfig } from './mtls.js';
 import { checkInstall } from './nativeInstaller/index.js';
@@ -247,7 +258,9 @@ export function buildAPIProviderProperties(): Property[] {
   if (apiProvider !== 'firstParty') {
     const providerLabel =
       apiProvider === 'custom'
-        ? (getProviderProfile(getConfiguredProviderId() ?? '')?.name ?? 'Custom provider')
+        ? (resolveProviderSafely()?.profile.name ??
+          getProviderProfile(getConfiguredProviderId() ?? '')?.name ??
+          'Custom provider')
         : {
             bedrock: 'AWS Bedrock',
             vertex: 'Google Vertex AI',
@@ -267,7 +280,10 @@ export function buildAPIProviderProperties(): Property[] {
       });
     }
   } else if (apiProvider === 'custom') {
+    // resolveProvider knows about settings-defined and catalog-only providers, which the
+    // built-in profile table does not; without it /status shows no base URL for them.
     const baseUrl =
+      resolveProviderSafely()?.baseURL ||
       process.env.FINWORKER_BASE_URL ||
       getProviderProfile(getConfiguredProviderId() ?? '')?.baseURL;
     if (baseUrl) {
