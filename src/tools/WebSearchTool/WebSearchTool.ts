@@ -5,8 +5,10 @@ import type {
 import { getAPIProvider } from 'src/utils/model/providers.js'
 import type { PermissionResult } from 'src/utils/permissions/PermissionResult.js'
 import { z } from 'zod/v4'
+import { getLocalISODate } from '../../constants/common.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../../services/analytics/growthbook.js'
 import { queryModelWithStreaming } from '../../services/api/claude.js'
+import { isCustomProviderActive } from '../../services/api/providers/index.js'
 import { buildTool, type ToolDef } from '../../Tool.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import { logError } from '../../utils/log.js'
@@ -14,7 +16,22 @@ import { createUserMessage } from '../../utils/messages.js'
 import { getMainLoopModel, getSmallFastModel } from '../../utils/model/model.js'
 import { jsonParse, jsonStringify } from '../../utils/slowOperations.js'
 import { asSystemPrompt } from '../../utils/systemPromptType.js'
-import { getWebSearchPrompt, WEB_SEARCH_TOOL_NAME } from './prompt.js'
+import {
+  applyRecencyDefault,
+  backupCall,
+  buildSearchRouterPrompt,
+  type CallResult,
+  describeCall,
+  fallbackCalls,
+  makeOutputFromLocalSearch,
+  makeSourceToolSchemas,
+  runSourceCalls,
+  type SourceCall,
+  selectSources,
+  toolCallsFrom,
+} from './localSearch.js'
+import type { SearchSource } from './sources/types.js'
+import { getLocalWebSearchPrompt, getWebSearchPrompt, WEB_SEARCH_TOOL_NAME } from './prompt.js'
 import {
   getToolUseSummary,
   renderToolResultMessage,
@@ -149,13 +166,33 @@ function makeOutputFromSearchResponse(
   }
 }
 
+// A failed routing request should not fail the search: the local path falls back to
+// querying every source with the query as given. User aborts still propagate.
+async function* tolerateRouterFailure<T>(
+  stream: AsyncIterable<T>,
+  signal: AbortSignal,
+  onError: (message: string) => void,
+): AsyncGenerator<T> {
+  try {
+    yield* stream
+  } catch (error) {
+    if (signal.aborted) throw error
+    logError(error)
+    onError(error instanceof Error ? error.message : String(error))
+  }
+}
+
+const ROUTER_TIMEOUT_MS = 30_000
+
 export const WebSearchTool = buildTool({
   name: WEB_SEARCH_TOOL_NAME,
   searchHint: 'search the web for current information',
   maxResultSizeChars: 100_000,
   shouldDefer: true,
   async description(input) {
-    return `Claude wants to search the web for: ${input.query}`
+    return isCustomProviderActive()
+      ? `FinWorker wants to search for: ${input.query}`
+      : `Claude wants to search the web for: ${input.query}`
   },
   userFacingName() {
     return 'Web Search'
@@ -166,6 +203,11 @@ export const WebSearchTool = buildTool({
     return summary ? `Searching for ${summary}` : 'Searching the web'
   },
   isEnabled() {
+    // Non-Anthropic providers search through the local specialist sources instead.
+    if (isCustomProviderActive()) {
+      return true
+    }
+
     const provider = getAPIProvider()
     const model = getMainLoopModel()
 
@@ -221,7 +263,7 @@ export const WebSearchTool = buildTool({
     }
   },
   async prompt() {
-    return getWebSearchPrompt()
+    return isCustomProviderActive() ? getLocalWebSearchPrompt() : getWebSearchPrompt()
   },
   renderToolUseMessage,
   renderToolUseProgressMessage,
@@ -259,29 +301,49 @@ export const WebSearchTool = buildTool({
     })
     const toolSchema = makeToolSchema(input)
 
+    // Non-Anthropic providers have no server-side web_search: the light model picks
+    // specialist sources as function tools, and their calls are executed locally below.
+    const localSources = isCustomProviderActive() ? selectSources(input) : undefined
+
     const useHaiku = getFeatureValue_CACHED_MAY_BE_STALE(
       'tengu_plum_vx3',
       false,
     )
+    const useSmallModel = useHaiku || !!localSources
 
     const appState = context.getAppState()
+    // The API client retries with backoff for minutes; source selection gets a deadline and
+    // falls back to searching every source instead of stalling the search.
+    const routerSignal = localSources
+      ? AbortSignal.any([context.abortController.signal, AbortSignal.timeout(ROUTER_TIMEOUT_MS)])
+      : context.abortController.signal
     const queryStream = queryModelWithStreaming({
       messages: [userMessage],
       systemPrompt: asSystemPrompt([
-        'You are an assistant for performing a web search tool use',
+        localSources
+          ? buildSearchRouterPrompt(getLocalISODate())
+          : 'You are an assistant for performing a web search tool use',
       ]),
-      thinkingConfig: useHaiku
+      thinkingConfig: useSmallModel
         ? { type: 'disabled' as const }
         : context.options.thinkingConfig,
       tools: [],
-      signal: context.abortController.signal,
+      signal: routerSignal,
       options: {
         getToolPermissionContext: async () => appState.toolPermissionContext,
-        model: useHaiku ? getSmallFastModel() : context.options.mainLoopModel,
-        toolChoice: useHaiku ? { type: 'tool', name: 'web_search' } : undefined,
+        model: useSmallModel ? getSmallFastModel() : context.options.mainLoopModel,
+        toolChoice: localSources
+          ? { type: 'any' }
+          : useHaiku
+            ? { type: 'tool', name: 'web_search' }
+            : undefined,
         isNonInteractiveSession: context.options.isNonInteractiveSession,
         hasAppendSystemPrompt: !!context.options.appendSystemPrompt,
-        extraToolSchemas: [toolSchema],
+        extraToolSchemas: localSources
+          ? makeSourceToolSchemas(localSources)
+          : [toolSchema],
+        // Routing should be deterministic, and needs only a few tool calls of output.
+        ...(localSources && { temperatureOverride: 0, maxOutputTokensOverride: 4096 }),
         querySource: 'web_search_tool',
         agents: context.options.agentDefinitions.activeAgents,
         mcpTools: [],
@@ -296,7 +358,13 @@ export const WebSearchTool = buildTool({
     let progressCounter = 0
     const toolUseQueries = new Map() // Map of tool_use_id to query
 
-    for await (const event of queryStream) {
+    let routerError = ''
+    const events = localSources
+      ? tolerateRouterFailure(queryStream, context.abortController.signal, message => {
+          routerError = message
+        })
+      : queryStream
+    for await (const event of events) {
       if (event.type === 'assistant') {
         allContentBlocks.push(...event.message.content)
         continue
@@ -385,6 +453,77 @@ export const WebSearchTool = buildTool({
           }
         }
       }
+    }
+
+    if (localSources) {
+      const routed = toolCallsFrom(allContentBlocks, localSources)
+      const calls = applyRecencyDefault(
+        query,
+        routed.length > 0 ? routed : fallbackCalls(query, localSources),
+        localSources,
+      )
+      const progressHooks = {
+        onStart: (call: SourceCall, source: SearchSource) => {
+          onProgress?.({
+            toolUseID: call.id,
+            data: {
+              type: 'query_update',
+              query: `${source.label}: ${describeCall(call)}`,
+            },
+          })
+        },
+        onDone: ({ call, source, hits }: CallResult) => {
+          onProgress?.({
+            toolUseID: call.id,
+            data: {
+              type: 'search_results_received',
+              resultCount: hits?.length ?? 0,
+              query: `${source.label}: ${describeCall(call)}`,
+            },
+          })
+        },
+      }
+      const callResults = await runSourceCalls(
+        calls,
+        localSources,
+        input,
+        context.abortController.signal,
+        progressHooks,
+      )
+      // Nothing found anywhere: fall back to general web search when it is available.
+      const backup = backupCall(query, callResults, localSources)
+      if (backup) {
+        callResults.push(
+          ...(await runSourceCalls(
+            applyRecencyDefault(query, [backup], localSources),
+            localSources,
+            input,
+            context.abortController.signal,
+            progressHooks,
+          )),
+        )
+      }
+      const data = makeOutputFromLocalSearch(
+        callResults,
+        query,
+        (performance.now() - startTime) / 1000,
+      )
+      if (routed.length === 0) {
+        if (!routerError && routerSignal.aborted) {
+          routerError = `source selection timed out after ${ROUTER_TIMEOUT_MS / 1000}s`
+        }
+        const reply = [
+          routerError,
+          ...allContentBlocks.flatMap(block => (block.type === 'text' ? [block.text.trim()] : [])),
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .slice(0, 300)
+        data.results.unshift(
+          `Source selection did not run${reply ? ` (${reply})` : ''}; every source was searched with the query as given.`,
+        )
+      }
+      return { data }
     }
 
     // Process the final result

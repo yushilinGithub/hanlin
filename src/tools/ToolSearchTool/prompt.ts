@@ -1,8 +1,10 @@
 import { feature } from 'bun:bundle'
 import { isReplBridgeActive } from '../../bootstrap/state.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../../services/analytics/growthbook.js'
+import { isCustomProviderActive } from '../../services/api/providers/index.js'
 import type { Tool } from '../../Tool.js'
 import { AGENT_TOOL_NAME } from '../AgentTool/constants.js'
+import { WEB_SEARCH_TOOL_NAME } from '../WebSearchTool/prompt.js'
 
 // Dead code elimination: Brief tool name only needed when KAIROS or KAIROS_BRIEF is on
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -101,6 +103,13 @@ export function isDeferredTool(tool: Tool): boolean {
     tool.name === SEND_USER_FILE_TOOL_NAME &&
     isReplBridgeActive()
   ) {
+    return false
+  }
+
+  // On non-Anthropic providers WebSearch is the only way to search (it routes to news,
+  // filings and paper sources). Deferred, the model sees only its name next to a fully
+  // described WebFetch, and scrapes search-engine pages with WebFetch instead.
+  if (tool.name === WEB_SEARCH_TOOL_NAME && isCustomProviderActive()) {
     return false
   }
 

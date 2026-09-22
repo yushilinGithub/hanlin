@@ -2,6 +2,8 @@ import {
 	AGENT_TOOL_NAME,
 	FINANCIAL_LOGIC_CRITIC_AGENT_TYPE,
 } from '../../tools/AgentTool/constants.js'
+import { WEB_FETCH_TOOL_NAME } from '../../tools/WebFetchTool/prompt.js'
+import { WEB_SEARCH_TOOL_NAME } from '../../tools/WebSearchTool/prompt.js'
 import { registerBundledSkill } from '../bundledSkills.js'
 
 const PRICE_MOVE_EXPLAINER_PROMPT = `# Price Move Explainer
@@ -20,13 +22,17 @@ Before researching, check auto-memory (\`feedback\` type) for prior corrections 
 - Convert any rough timeframe ("last week," "this month") into an explicit date range against today's date.
 - Identify the listing venue — this determines which primary-disclosure source applies in Step 5. Do not assume a U.S. listing; check the ticker format and exchange (e.g. a \`.SH\`/\`.SS\` suffix or 6-digit code beginning 60/68 is Shanghai Stock Exchange; \`.SZ\`/000/002/300 is Shenzhen Stock Exchange; no suffix or a 1-5 letter ticker is typically a U.S. exchange, but confirm rather than assume).
 
+## Tools
+
+Do every search with the ${WEB_SEARCH_TOOL_NAME} tool (it returns dated news, filings and quote pages, in Chinese or English). Use ${WEB_FETCH_TOOL_NAME} only to open a specific URL — one returned by ${WEB_SEARCH_TOOL_NAME}, a quote page, or a filing. Never ${WEB_FETCH_TOOL_NAME} a search-engine results page (bing.com/search, google.com/search, baidu.com/s): those return anti-bot or unrelated pages.
+
 ## Step 2: Establish the move itself before explaining it
 
-Search to find a live quote source, then fetch that specific page directly — never state a price or move size from a search snippet alone, since snippets can be badly stale (validated directly: a snippet returned a price five months old and roughly 85% off the fetched, dated value for a real ticker). State the percentage move, with start and end price or index level, each with its own citation and retrieval timestamp, before offering any explanation.
+Search with ${WEB_SEARCH_TOOL_NAME} to find a live quote source, then fetch that specific page directly — never state a price or move size from a search snippet alone, since snippets can be badly stale (validated directly: a snippet returned a price five months old and roughly 85% off the fetched, dated value for a real ticker). State the percentage move, with start and end price or index level, each with its own citation and retrieval timestamp, before offering any explanation.
 
 ## Step 3: Search recent news
 
-Search patterns like "<TICKER> stock why did it fall/rise <timeframe>" and "<sector> stocks <date range> selloff/rally." Prioritize primary sources (company press releases, investor relations, earnings releases) over aggregator or blog content.
+Search with ${WEB_SEARCH_TOOL_NAME} using patterns like "<TICKER> stock why did it fall/rise <timeframe>" and "<sector> stocks <date range> selloff/rally." For China A-shares, search in Chinese with the sector or company name and the date, e.g. "半导体设备 板块 <日期> 冲高回落 原因". Prioritize primary sources (company press releases, investor relations, earnings releases) over aggregator or blog content.
 
 ## Step 4: Fetch the 2-4 most relevant sources
 

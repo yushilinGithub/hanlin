@@ -10,6 +10,7 @@ import type {
   BetaRawMessageStreamEvent,
   BetaRequestDocumentBlock,
   BetaStopReason,
+  BetaToolChoiceAny,
   BetaToolChoiceAuto,
   BetaToolChoiceTool,
   BetaToolResultBlockParam,
@@ -676,7 +677,7 @@ export function assistantMessageToMessageParam(
 export type Options = {
   getToolPermissionContext: () => Promise<ToolPermissionContext>
   model: string
-  toolChoice?: BetaToolChoiceTool | BetaToolChoiceAuto | undefined
+  toolChoice?: BetaToolChoiceTool | BetaToolChoiceAuto | BetaToolChoiceAny | undefined
   isNonInteractiveSession: boolean
   extraToolSchemas?: BetaToolUnion[]
   maxOutputTokensOverride?: number
