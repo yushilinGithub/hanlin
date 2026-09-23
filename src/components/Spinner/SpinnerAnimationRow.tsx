@@ -13,7 +13,7 @@ import { GlimmerMessage } from './GlimmerMessage.js';
 import { SpinnerGlyph } from './SpinnerGlyph.js';
 import type { SpinnerMode } from './types.js';
 import { useStalledAnimation } from './useStalledAnimation.js';
-import { interpolateColor, toRGBColor } from './utils.js';
+import { toRGBColor } from './utils.js';
 const SEP_WIDTH = stringWidth(' · ');
 const THINKING_BARE_WIDTH = stringWidth('thinking');
 const SHOW_TOKENS_AFTER_MS = 30_000;
@@ -26,13 +26,6 @@ const THINKING_INACTIVE = {
   g: 153,
   b: 153
 };
-const THINKING_INACTIVE_SHIMMER = {
-  r: 185,
-  g: 185,
-  b: 185
-};
-const THINKING_DELAY_MS = 3000;
-const THINKING_GLOW_PERIOD_S = 2;
 export type SpinnerAnimationRowProps = {
   // Animation inputs
   mode: SpinnerMode;
@@ -125,18 +118,21 @@ export function SpinnerAnimationRow({
   // while leader is idle, they'd otherwise flag a false stall after 3s.
   // Treating leaderIsIdle like hasActiveTools resets the stall timer.
   const {
-    isStalled,
     stalledIntensity
   } = useStalledAnimation(time, currentResponseLength, hasActiveTools || leaderIsIdle, reducedMotion);
   const frame = reducedMotion ? 0 : Math.floor(time / 120);
-  const glimmerSpeed = mode === 'requesting' ? 50 : 200;
   // message is stable within a turn; stringWidth is expensive enough (Bun native
   // call per code point) to memoize explicitly across the 50ms loop.
   const glimmerMessageWidth = useMemo(() => stringWidth(message), [message]);
-  const cycleLength = glimmerMessageWidth + 20;
-  const cyclePosition = Math.floor(time / glimmerSpeed);
-  const glimmerIndex = reducedMotion ? -100 : isStalled ? -100 : mode === 'requesting' ? cyclePosition % cycleLength - 10 : glimmerMessageWidth + 10 - cyclePosition % cycleLength;
-  const flashOpacity = reducedMotion ? 0 : mode === 'tool-use' ? (Math.sin(time / 1000 * Math.PI) + 1) / 2 : 0;
+  // Text marquee disabled: the travelling highlight repainted the verb 5-20 times a
+  // second, and some terminals redraw that incompletely (leftover characters mid-word).
+  // The animated glyph in front of the message already signals "working". -100 keeps the
+  // highlight window off the left edge, so GlimmerMessage renders one static Text node.
+  const glimmerIndex = -100;
+  // 0 for the same reason glimmerIndex is frozen: in tool-use mode this pulsed
+  // the whole message's colour on the 50ms clock, which is another per-frame
+  // repaint of the verb and can leave the same doubled characters behind.
+  const flashOpacity = 0;
 
   // === Token counter animation (smooth increment, driven by 50ms clock) ===
   const tokenCounterRef = useRef(currentResponseLength);
@@ -192,12 +188,10 @@ export function SpinnerAnimationRow({
   const showTokens = wantsTimerAndTokens && totalTokens > 0 && availableSpace > usedAfterTimer + tokensWidth;
   const thinkingOnly = showThinking && thinkingStatus === 'thinking' && !spinnerSuffix && !showTimer && !showTokens && true;
 
-  // === Thinking shimmer color (formerly ThinkingShimmerText's own timer) ===
-  // Same sine-wave opacity, but derived from our shared `time` instead of a
-  // second useAnimationFrame(50) subscription.
-  const thinkingElapsedSec = (time - THINKING_DELAY_MS) / 1000;
-  const thinkingOpacity = time < THINKING_DELAY_MS ? 0 : (Math.sin(thinkingElapsedSec * Math.PI * 2 / THINKING_GLOW_PERIOD_S) + 1) / 2;
-  const thinkingShimmerColor = toRGBColor(interpolateColor(THINKING_INACTIVE, THINKING_INACTIVE_SHIMMER, thinkingOpacity));
+  // === Thinking label color ===
+  // Static, like the verb: the pulsing version recoloured this word every frame,
+  // and a partial redraw of it showed up as a doubled letter ("tthinking").
+  const thinkingShimmerColor = toRGBColor(THINKING_INACTIVE);
 
   // === Build status parts ===
   const parts = [...(spinnerSuffix ? [<Text dimColor key="suffix">
