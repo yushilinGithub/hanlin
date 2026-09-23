@@ -29,61 +29,72 @@ It runs on Anthropic's Claude models, and equally on any OpenAI-compatible provi
 - **🔌 MCP Protocol Native**: Features a built-in Model Context Protocol (MCP) server for integration with Claude Desktop, VS Code Copilot, and Cursor.
 - **🤖 Multi-Agent Orchestration**: Autonomous sub-agents, task management, inter-agent messaging, and background execution.
 - **📊 Financial Engineering Integration**: Optimized for quant workflow automation, data processing, and financial API orchestration.
-- **🔎 Research-Grade Search**: One `WebSearch` tool routed to specialist sources — market news, A-share disclosures, research papers and general web search — every result dated and cited.
+- **🔎 Dated, Cited Search**: Built-in search that works on every provider, with a publish date and link on each result.
 - **🌏 Any Model, Any Language**: Claude or any OpenAI-compatible provider; queries and answers in Chinese or English.
 - **🛡️ Granular Permissions**: Comprehensive safety controls and approval flows for file modifications and terminal command executions.
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Build & Install
 
 ### Prerequisites
 
-- **Bun**: `>= 1.1.0` (Install via `curl -fsSL https://bun.sh/install | bash`)
-- **Node.js**: `>= 20` (Optional, for MCP server building)
+- **Bun**: `>= 1.1.0` (`curl -fsSL https://bun.sh/install | bash`)
+- **Node.js**: `>= 20` — runs the built bundle, and builds the MCP server
 
-### Installation
+### Build
 
 ```bash
-# 1. Clone the repository
 git clone -b dev https://github.com/yushilinGithub/hanlin.git
 cd hanlin
 
-# 2. Install dependencies
-bun install
-
-# 3. Build the CLI bundle
-bun run build
+bun install          # dependencies
+bun run build        # bundles the CLI to dist/cli.mjs
 ```
 
-### Usage
-
-Run Hanlin CLI directly with Bun:
+Run it from the repository:
 
 ```bash
-# Run CLI REPL
-bun run src/entrypoints/cli.tsx
-
-# Or execute built bundle
-node dist/cli.mjs
-
-# Ask a single question without entering the REPL
-node dist/cli.mjs -p "半导体设备最新新闻"
+node dist/cli.mjs                       # interactive REPL
+node dist/cli.mjs -p "your question"    # one-shot, prints the answer and exits
+bun src/entrypoints/cli.tsx             # run from source, no build step
 ```
 
-Configuration lives in `~/.hanlin/settings.json` (user scope) and `<repo>/.claude/settings.json` (project scope).
+### Install the `hanlin` command
+
+Put a small wrapper on your `PATH` so `hanlin` works in any directory:
+
+```bash
+mkdir -p ~/.local/bin
+cat > ~/.local/bin/hanlin <<EOF
+#!/bin/sh
+exec node "$(pwd)/dist/cli.mjs" "\$@"
+EOF
+chmod +x ~/.local/bin/hanlin
+```
+
+Add `~/.local/bin` to your `PATH` if it is not there yet (`export PATH="$HOME/.local/bin:$PATH"` in `~/.zshrc`), then check:
+
+```bash
+hanlin --version      # 0.9.1 (Hanlin)
+hanlin                # start a session in the current directory
+```
+
+The wrapper runs whatever is in `dist/`, so re-run `bun run build` after changing `src/`.
 
 ---
 
-## 🧠 Models & Providers
+## 🧠 Configure the model API
 
-Anthropic is the default. Any other provider is selected with `HANLIN_PROVIDER`, or by setting `model` in `~/.hanlin/settings.json` to a `provider/model` pair:
+Hanlin uses Anthropic by default (`/login`, or an `ANTHROPIC_API_KEY`). Any OpenAI-compatible provider works too — hosted (DeepSeek, Qwen/DashScope, Moonshot, Zhipu, OpenRouter, Groq, Together, Fireworks) or self-hosted (vLLM, SGLang, LM Studio, Ollama).
+
+### Per run, with environment variables
 
 ```bash
-# A hosted provider — the key is read from its conventional env var
+# A hosted provider — the key is read from its conventional variable
 DEEPSEEK_API_KEY=sk-… HANLIN_PROVIDER=deepseek hanlin
 
-# Any OpenAI-compatible server (vLLM, SGLang, LM Studio, …)
+# Any OpenAI-compatible server
 HANLIN_PROVIDER=openai-compatible HANLIN_BASE_URL=http://localhost:8000/v1 \
   HANLIN_MODEL=Qwen/Qwen2.5-Coder-32B-Instruct hanlin
 ```
@@ -91,29 +102,46 @@ HANLIN_PROVIDER=openai-compatible HANLIN_BASE_URL=http://localhost:8000/v1 \
 | Variable | Purpose |
 |---|---|
 | `HANLIN_PROVIDER` | Provider id. Unset means Anthropic. |
-| `HANLIN_BASE_URL` | Overrides the provider's endpoint. |
+| `HANLIN_BASE_URL` | Overrides the provider's endpoint. Required for `openai-compatible`. |
 | `HANLIN_API_KEY` | Overrides the provider's conventional key variable. |
 | `HANLIN_MODEL` | Model to run; accepts `provider/model`. |
-| `HANLIN_SMALL_MODEL` | Cheaper model for side queries (titles, search routing). |
+| `HANLIN_SMALL_MODEL` | Cheaper model for side queries (titles, classification). |
 
-See [docs/providers.md](docs/providers.md) for the full catalog, `/model` behavior and `settings.json` examples.
+### Permanently, in `~/.hanlin/settings.json`
 
----
+Keys in `env` are applied at startup, so you do not have to export them:
 
-## 🔎 Search
+```jsonc
+{
+  "model": "deepseek/deepseek-chat",
+  "env": {
+    "DEEPSEEK_API_KEY": "sk-…"
+  }
+}
+```
 
-`WebSearch` takes a plain query and routes it to the sources that fit, in Chinese or English. On Anthropic models it uses Anthropic's server-side web search; on every other provider a small model picks among specialist sources and Hanlin queries them directly:
+A provider that needs its own endpoint, key variable or model limits is declared under `providers`:
 
-| Source | Covers |
-|---|---|
-| Yahoo Finance | Company and market news by ticker, including `.SZ` / `.SS` / `.HK` listings |
-| 东方财富 Eastmoney (falling back to 新浪财经 Sina) | Chinese financial news |
-| 巨潮资讯 cninfo | A-share announcements: annual, semi-annual and quarterly reports, earnings forecasts, dividends |
-| arXiv · PubMed · OpenAlex | Preprints, biomedical literature, and published papers incl. IEEE |
-| Hugging Face · Hacker News | AI models and papers; product launches and developer discussion |
-| Tavily (optional, `TAVILY_API_KEY`) | General web and news search; also the automatic backup when the sources above return nothing |
+```jsonc
+{
+  "model": "my-vllm/Qwen3-Coder-30B",
+  "env": { "MY_VLLM_KEY": "…" },
+  "providers": {
+    "my-vllm": {
+      "baseURL": "https://vllm.internal/v1",
+      "apiKeyEnv": "MY_VLLM_KEY",
+      "models": {
+        // Without these, a large-context model is metered against the 200k default.
+        "Qwen3-Coder-30B": { "contextWindow": 262144, "maxOutputTokens": 65536 }
+      }
+    }
+  }
+}
+```
 
-Every result carries a publish date and a link, and answers cite their sources.
+Settings resolve user scope (`~/.hanlin/settings.json`) first, then project scope (`<repo>/.claude/settings.json`), then environment variables, which win. Inside a session, `/model` lists the models each configured provider offers.
+
+See [docs/providers.md](docs/providers.md) for the full catalog and more examples.
 
 ---
 

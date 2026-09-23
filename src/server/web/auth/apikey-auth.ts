@@ -149,7 +149,7 @@ const INLINE_LOGIN_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Claude Code — Sign In</title>
+  <title>Hanlin — Sign In</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -205,7 +205,7 @@ const INLINE_LOGIN_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <div class="card">
-    <h1>Claude Code</h1>
+    <h1>Hanlin</h1>
     <p class="subtitle">Enter your Anthropic API key to start a session.</p>
     <!--ERROR-->
     <form method="POST" action="/auth/login">

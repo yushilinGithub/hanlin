@@ -99,7 +99,7 @@ const INLINE_ADMIN_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Claude Code — Admin</title>
+  <title>Hanlin — Admin</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; background: #0d1117; color: #e6edf3; padding: 2rem; }
@@ -127,7 +127,7 @@ const INLINE_ADMIN_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <h1>Admin Dashboard</h1>
-  <p class="subtitle">Claude Code — multi-user session management</p>
+  <p class="subtitle">Hanlin — multi-user session management</p>
 
   <button class="refresh" onclick="load()">&#8635; Refresh</button>
 
