@@ -207,6 +207,10 @@ export type MessageActionsNav = {
 };
 export const MessageActionsSelectedContext = React.createContext(false);
 export const InVirtualListContext = React.createContext(false);
+/** Whether the enclosing virtual-list row has a click handler (see isItemClickable).
+ * Collapsed rows read this so they only advertise "(click to expand)" when clicking
+ * actually does something. */
+export const RowClickableContext = React.createContext(false);
 
 // bg must go on the Box that HAS marginTop (margin stays outside paint) — that's inside each consumer.
 export function useSelectedMessageBg() {

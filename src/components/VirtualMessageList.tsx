@@ -16,7 +16,7 @@ const HEADROOM = 3;
 import { logForDebugging } from '../utils/debug.js';
 import { sleep } from '../utils/sleep.js';
 import { renderableSearchText } from '../utils/transcriptSearch.js';
-import { isNavigableMessage, type MessageActionsNav, type MessageActionsState, type NavigableMessage, stripSystemReminders, toolCallOf } from './messageActions.js';
+import { RowClickableContext, isNavigableMessage, stripSystemReminders, toolCallOf, type MessageActionsNav, type MessageActionsState, type NavigableMessage } from './messageActions.js';
 
 // Fallback extractor: lower + cache here for callers without the
 // Messages.tsx tool-lookup path (tests, static contexts). Messages.tsx
@@ -195,7 +195,7 @@ type VirtualItemProps = {
 // STALE closure on bail (wrong selection highlight, stale verbose). Including
 // renderItem in the comparator defeats memo since it's fresh each render.
 function VirtualItem(t0) {
-  const $ = _c(30);
+  const $ = _c(31);
   const {
     itemKey: k,
     msg,
@@ -262,10 +262,11 @@ function VirtualItem(t0) {
     t8 = $[18];
   }
   let t9;
-  if ($[19] !== t7 || $[20] !== t8) {
-    t9 = <TextHoverColorContext.Provider value={t7}>{t8}</TextHoverColorContext.Provider>;
+  if ($[19] !== t7 || $[20] !== t8 || $[30] !== clickable) {
+    t9 = <TextHoverColorContext.Provider value={t7}><RowClickableContext.Provider value={clickable}>{t8}</RowClickableContext.Provider></TextHoverColorContext.Provider>;
     $[19] = t7;
     $[20] = t8;
+    $[30] = clickable;
     $[21] = t9;
   } else {
     t9 = $[21];

@@ -105,15 +105,27 @@ export function _resetTmuxControlModeProbeForTesting(): void {
 }
 
 /**
- * Runtime env-var check only. Ants default to on (CLAUDE_CODE_NO_FLICKER=0
- * to opt out); external users default to off (CLAUDE_CODE_NO_FLICKER=1 to
- * opt in).
+ * Either name works; HANLIN_* is this fork's own, CLAUDE_CODE_* is kept so
+ * existing setups and upstream documentation keep working.
+ */
+function fullscreenEnv(suffix: string): string | undefined {
+  // `||`, not `??`: a wrapper that exports HANLIN_NO_FLICKER= (empty) would
+  // otherwise mask a real CLAUDE_CODE_NO_FLICKER=0 opt-out. Every meaningful
+  // value is a non-empty string.
+  return process.env[`HANLIN_${suffix}`] || process.env[`CLAUDE_CODE_${suffix}`]
+}
+
+/**
+ * Runtime env-var check only. Fullscreen is on by default — it is what makes
+ * the transcript a live, virtualized list, so collapsed blocks can expand in
+ * place when clicked. Set HANLIN_NO_FLICKER=0 to opt out and fall back to the
+ * terminal's own scrollback.
  */
 export function isFullscreenEnvEnabled(): boolean {
   // Explicit user opt-out always wins.
-  if (isEnvDefinedFalsy(process.env.CLAUDE_CODE_NO_FLICKER)) return false
+  if (isEnvDefinedFalsy(fullscreenEnv('NO_FLICKER'))) return false
   // Explicit opt-in overrides auto-detection (escape hatch).
-  if (isEnvTruthy(process.env.CLAUDE_CODE_NO_FLICKER)) return true
+  if (isEnvTruthy(fullscreenEnv('NO_FLICKER'))) return true
   // Auto-disable under tmux -CC: alt-screen + mouse tracking corrupts
   // terminal state on double-click and mouse wheel is dead.
   if (isTmuxControlMode()) {
@@ -125,7 +137,7 @@ export function isFullscreenEnvEnabled(): boolean {
     }
     return false
   }
-  return process.env.USER_TYPE === 'ant'
+  return true
 }
 
 /**
@@ -138,7 +150,7 @@ export function isFullscreenEnvEnabled(): boolean {
  * disables alt-screen and virtualized scrollback.
  */
 export function isMouseTrackingEnabled(): boolean {
-  return !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_MOUSE)
+  return !isEnvTruthy(fullscreenEnv('DISABLE_MOUSE'))
 }
 
 /**
@@ -149,7 +161,7 @@ export function isMouseTrackingEnabled(): boolean {
  * Fullscreen-specific — only reachable when CLAUDE_CODE_NO_FLICKER is active.
  */
 export function isMouseClicksDisabled(): boolean {
-  return isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_MOUSE_CLICKS)
+  return isEnvTruthy(fullscreenEnv('DISABLE_MOUSE_CLICKS'))
 }
 
 /**

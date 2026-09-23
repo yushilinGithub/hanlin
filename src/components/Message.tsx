@@ -3,6 +3,7 @@ import { feature } from 'bun:bundle';
 import type { BetaContentBlock } from '@anthropic-ai/sdk/resources/beta/messages/messages.mjs';
 import type { ImageBlockParam, TextBlockParam, ThinkingBlockParam, ToolResultBlockParam, ToolUseBlockParam } from '@anthropic-ai/sdk/resources/index.mjs';
 import * as React from 'react';
+import { InVirtualListContext } from './messageActions.js';
 import type { Command } from '../commands.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { Box } from '../ink.js';
@@ -451,6 +452,8 @@ function AssistantMessageBlock(t0) {
     lastThinkingBlockId,
     advisorModel
   } = t0;
+  // Read before any early return: hooks must run unconditionally.
+  const inVirtualList = React.useContext(InVirtualListContext);
   if (feature("CONNECTOR_TEXT")) {
     if (isConnectorTextBlock(param)) {
       let t1;
@@ -538,7 +541,11 @@ function AssistantMessageBlock(t0) {
       }
     case "thinking":
       {
-        if (!isTranscriptMode && !verbose) {
+        // The collapsed "∴ Thinking" line exists to be clicked, so it is only
+        // worth drawing inside the virtualized list. Headless renders
+        // (exportRenderer, "open transcript in editor") have no click target
+        // and would otherwise emit a bare hint with no reasoning behind it.
+        if (!isTranscriptMode && !verbose && !inVirtualList) {
           return null;
         }
         const isLastThinking = !lastThinkingBlockId || thinkingBlockId === lastThinkingBlockId;

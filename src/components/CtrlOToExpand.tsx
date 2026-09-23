@@ -5,7 +5,8 @@ import { Text } from '../ink.js';
 import { getShortcutDisplay } from '../keybindings/shortcutFormat.js';
 import { useShortcutDisplay } from '../keybindings/useShortcutDisplay.js';
 import { KeyboardShortcutHint } from './design-system/KeyboardShortcutHint.js';
-import { InVirtualListContext } from './messageActions.js';
+import { isMouseClicksDisabled, isMouseTrackingEnabled } from '../utils/fullscreen.js';
+import { InVirtualListContext, RowClickableContext } from './messageActions.js';
 
 // Context to track if we're inside a sub agent
 // Similar to MessageResponseContext, this helps us avoid showing
@@ -30,9 +31,17 @@ export function CtrlOToExpand() {
   const $ = _c(2);
   const isInSubAgent = useContext(SubAgentContext);
   const inVirtualList = useContext(InVirtualListContext);
+  const rowClickable = useContext(RowClickableContext);
   const expandShortcut = useShortcutDisplay("app:toggleTranscript", "Global", "ctrl+o");
-  if (isInSubAgent || inVirtualList) {
+  if (isInSubAgent) {
     return null;
+  }
+  // Inside the virtualized list the row itself is clickable, so ctrl+o (which
+  // switches the whole screen to transcript mode) is the wrong thing to
+  // advertise. Deliberately not memoized: one Text node per collapsed row.
+  if (inVirtualList) {
+    const clickable = rowClickable && isMouseTrackingEnabled() && !isMouseClicksDisabled();
+    return clickable ? <Text dimColor={true}>{"(click to expand)"}</Text> : null;
   }
   let t0;
   if ($[0] !== expandShortcut) {

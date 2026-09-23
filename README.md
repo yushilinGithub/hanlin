@@ -84,6 +84,21 @@ The wrapper runs whatever is in `dist/`, so re-run `bun run build` after changin
 
 ---
 
+## 🖱 Transcript interaction
+
+Tool calls and long output collapse to a single line. **Click a collapsed line to expand it in place**, and click again to collapse — including the `∴ Thinking` line, which expands to the model's reasoning where the provider returns it. `ctrl+o` still switches the whole screen to transcript mode.
+
+This runs in the alternate screen, which means Hanlin owns scrolling while it is running and the terminal captures mouse events, so selecting text needs ⌥ (macOS) or ⇧ held down. Two escape hatches:
+
+| Variable | Effect |
+|---|---|
+| `HANLIN_NO_FLICKER=0` | No alternate screen and no mouse capture. The terminal's own scrollback and selection behave as usual; clicking to expand is unavailable. |
+| `HANLIN_DISABLE_MOUSE=1` | Keeps the alternate screen and scrolling, but does not capture the mouse, so native selection keeps working. |
+
+The `CLAUDE_CODE_*` spellings of both still work. Under `tmux -CC` the alternate screen disables itself automatically.
+
+---
+
 ## 🧠 Configure the model API
 
 Hanlin uses Anthropic by default (`/login`, or an `ANTHROPIC_API_KEY`). Any OpenAI-compatible provider works too — hosted (DeepSeek, Qwen/DashScope, Moonshot, Zhipu, OpenRouter, Groq, Together, Fireworks) or self-hosted (vLLM, SGLang, LM Studio, Ollama).

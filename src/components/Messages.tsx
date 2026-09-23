@@ -19,7 +19,7 @@ import type { Tools } from '../Tool.js';
 import { findToolByName } from '../Tool.js';
 import type { AgentDefinitionsResult } from '../tools/AgentTool/loadAgentsDir.js';
 import type { Message as MessageType, NormalizedMessage, ProgressMessage as ProgressMessageType, RenderableMessage } from '../types/message.js';
-import { type AdvisorBlock, isAdvisorBlock } from '../utils/advisor.js';
+import { hasExpandableThinking, isAdvisorResultMessage } from './messageExpansion.js';
 import { collapseBackgroundBashNotifications } from '../utils/collapseBackgroundBashNotifications.js';
 import { collapseHookSummaries } from '../utils/collapseHookSummaries.js';
 import { collapseReadSearchGroups } from '../utils/collapseReadSearch.js';
@@ -582,8 +582,7 @@ const MessagesImpl = ({
   const isItemClickable = useCallback((msg_6: RenderableMessage): boolean => {
     if (msg_6.type === 'collapsed_read_search') return true;
     if (msg_6.type === 'assistant') {
-      const b = msg_6.message.content[0] as unknown as AdvisorBlock | undefined;
-      return b != null && isAdvisorBlock(b) && b.type === 'advisor_tool_result' && b.content.type === 'advisor_result';
+      return isAdvisorResultMessage(msg_6) || hasExpandableThinking(msg_6);
     }
     if (msg_6.type !== 'user') return false;
     const b_0 = msg_6.message.content[0];
