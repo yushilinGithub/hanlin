@@ -88,7 +88,7 @@ function byNewestFirst(a: CatalogModel, b: CatalogModel): number {
 /**
  * Models a provider offers, newest first.
  *
- * Models without tool calling are excluded outright — finWorker is an agent, and a model
+ * Models without tool calling are excluded outright — Hanlin is an agent, and a model
  * that cannot call a tool cannot run the loop.
  */
 export function getCatalogModelsFor(providerId: string): CatalogModel[] {

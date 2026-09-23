@@ -4,41 +4,42 @@ import { truncate } from '../../utils/format.js'
 import type { LogOption } from '../../types/logs.js'
 
 /**
- * FinWorker start screen: a block-letter wordmark over the session context.
+ * Hanlin start screen: a block-letter wordmark over the session context.
  *
  * The wordmark renders at one of three sizes, picked from the terminal width:
  *
- *   >= FULL_MIN_COLS     the full ANSI-shadow wordmark (6 rows, 72 columns)
- *   >= COMPACT_MIN_COLS  a half-height wordmark (3 rows, 44 columns)
+ *   >= FULL_MIN_COLS     the full ANSI-shadow wordmark (6 rows, 47 columns)
+ *   >= COMPACT_MIN_COLS  a half-height wordmark (3 rows, ~32 columns)
  *   below that           the plain name
  *
  * Each tier's columns already include the paddingX the wrapper adds on both
- * sides, so the art never wraps.
+ * sides, so the art never wraps. The Chinese name sits above the art, where a
+ * terminal that cannot render the block glyphs still shows it.
  */
 
-/** Full-size wordmark: ANSI-shadow caps, 6 rows of a fixed 72 columns. */
+/** The product name as shown wherever the art does not fit. */
+export const HANLIN_NAME = '翰林 Hanlin'
+
+/** Full-size wordmark: ANSI-shadow caps spelling HANLIN, 6 rows of 47 columns. */
 const FULL_ROWS: readonly string[] = [
-  '███████╗██╗███╗   ██╗██╗    ██╗ ██████╗ ██████╗ ██╗  ██╗███████╗██████╗ ',
-  '██╔════╝██║████╗  ██║██║    ██║██╔═══██╗██╔══██╗██║ ██╔╝██╔════╝██╔══██╗',
-  '█████╗  ██║██╔██╗ ██║██║ █╗ ██║██║   ██║██████╔╝█████╔╝ █████╗  ██████╔╝',
-  '██╔══╝  ██║██║╚██╗██║██║███╗██║██║   ██║██╔══██╗██╔═██╗ ██╔══╝  ██╔══██╗',
-  '██║     ██║██║ ╚████║╚███╔███╔╝╚██████╔╝██║  ██║██║  ██╗███████╗██║  ██║',
-  '╚═╝     ╚═╝╚═╝  ╚═══╝ ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝',
+  '██╗  ██╗ █████╗ ███╗   ██╗██╗     ██╗███╗   ██╗',
+  '██║  ██║██╔══██╗████╗  ██║██║     ██║████╗  ██║',
+  '███████║███████║██╔██╗ ██║██║     ██║██╔██╗ ██║',
+  '██╔══██║██╔══██║██║╚██╗██║██║     ██║██║╚██╗██║',
+  '██║  ██║██║  ██║██║ ╚████║███████╗██║██║ ╚████║',
+  '╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝╚═╝  ╚═══╝',
 ]
 
 /** Half-height glyphs, joined with a two-space gap, for narrower terminals. */
 const COMPACT_GLYPHS: Record<string, [string, string, string]> = {
-  F: ['█▀▀', '█▀ ', '█  '],
-  I: ['█', '█', '█'],
+  H: ['█ █', '█▀█', '▀ ▀'],
+  A: ['▄▀▄', '█▀█', '▀ ▀'],
   N: ['█▄ █', '█ ▀█', '█  █'],
-  W: ['█   █', '█ ▄ █', '▀▄▀▄▀'],
-  O: ['▄▀▄', '█ █', '▀▄▀'],
-  R: ['█▀▄', '█▀▄', '▀ ▀'],
-  K: ['█▄▀', '█▀▄', '▀ ▀'],
-  E: ['█▀▀', '█▀ ', '▀▀▀'],
+  L: ['█  ', '█  ', '▀▀▀'],
+  I: ['█', '█', '█'],
 }
 
-const WORD = 'FINWORKER'
+const WORD = 'HANLIN'
 const GLYPH_GAP = '  '
 
 const COMPACT_ROWS: string[] = [0, 1, 2].map(row =>
@@ -64,7 +65,7 @@ type Props = {
   activities: LogOption[]
 }
 
-export function FinWorkerWordmark({
+export function HanlinWordmark({
   welcomeMessage,
   version,
   modelDisplayName,
@@ -92,14 +93,19 @@ export function FinWorkerWordmark({
   return (
     <Box flexDirection="column" paddingX={2} paddingY={1}>
       {wordmarkRows ? (
-        wordmarkRows.map((row, i) => (
-          <Text key={i} bold={true} color="claude">
-            {row}
+        <>
+          <Text bold={true} color="claude">
+            翰林
           </Text>
-        ))
+          {wordmarkRows.map((row, i) => (
+            <Text key={i} bold={true} color="claude">
+              {row}
+            </Text>
+          ))}
+        </>
       ) : (
         <Text bold={true} color="claude">
-          FinWorker
+          {HANLIN_NAME}
         </Text>
       )}
 

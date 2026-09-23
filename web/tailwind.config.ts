@@ -89,7 +89,7 @@ const config: Config = {
           text: "var(--color-code-text)",
         },
 
-        // Brand palette — FinWorker blue, anchored on #258bff (500)
+        // Brand palette — Hanlin blue, anchored on #258bff (500)
         // with the TUI's lighter accent #a5cfff at 300.
         brand: {
           50: "#eff6ff",

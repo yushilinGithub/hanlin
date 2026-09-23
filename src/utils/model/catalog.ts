@@ -7,7 +7,7 @@ import { getClaudeConfigHomeDir, isEnvTruthy } from '../envUtils.js'
 /**
  * The models.dev catalog: model metadata for every known provider.
  *
- * This is the same source opencode uses. It supplies the four things finWorker otherwise
+ * This is the same source opencode uses. It supplies the four things Hanlin otherwise
  * guesses at for a non-Claude model — context window, max output, pricing and whether the
  * model reasons — all of which silently fall back to Claude-shaped defaults without it.
  *
@@ -49,7 +49,7 @@ function cachePath(): string {
 }
 
 function catalogUrl(): string {
-  return process.env.FINWORKER_MODELS_URL?.trim() || DEFAULT_URL
+  return process.env.HANLIN_MODELS_URL?.trim() || DEFAULT_URL
 }
 
 let cached: Catalog | null | undefined
@@ -142,7 +142,7 @@ export function getCatalog(): Catalog {
 
 export function startRefresh(): void {
   if (refreshStarted) return
-  if (isEnvTruthy(process.env.FINWORKER_DISABLE_MODELS_FETCH)) return
+  if (isEnvTruthy(process.env.HANLIN_DISABLE_MODELS_FETCH)) return
   refreshStarted = true
   void refresh()
 }

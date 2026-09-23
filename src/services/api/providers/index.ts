@@ -34,7 +34,7 @@ function settings(): { provider?: string; model?: string; providers?: Record<str
 /**
  * The models.dev id to look metadata up under.
  *
- * finWorker's built-in short ids (`dashscope`) do not always match the catalog's
+ * Hanlin's built-in short ids (`dashscope`) do not always match the catalog's
  * (`alibaba-cn`), and users configure the short ones.
  */
 export function getCatalogIdFor(providerId: string): string {
@@ -49,7 +49,7 @@ export function getCatalogIdFor(providerId: string): string {
  * instead — with the configured provider's API key.
  */
 function explicitProviderId(): string | undefined {
-  return process.env.FINWORKER_PROVIDER?.trim() || settings().provider?.trim() || undefined
+  return process.env.HANLIN_PROVIDER?.trim() || settings().provider?.trim() || undefined
 }
 
 /** Split `provider/model` when the prefix names a provider we know about. */
@@ -80,7 +80,7 @@ function isKnownProviderId(id: string): boolean {
     Boolean(getProviderProfile(id)) ||
     Boolean(settings().providers?.[id]) ||
     // Any models.dev provider counts, so `alibaba-cn/deepseek-v4-pro` resolves without
-    // finWorker having to hardcode every provider that exists.
+    // Hanlin having to hardcode every provider that exists.
     Boolean(getCatalogProvider(id))
   if (known) knownProviderIds.add(id)
   return known
@@ -89,7 +89,7 @@ function isKnownProviderId(id: string): boolean {
 /**
  * Provider id for this session.
  *
- * Precedence: FINWORKER_PROVIDER, then a `provider/model` prefix on the configured model,
+ * Precedence: HANLIN_PROVIDER, then a `provider/model` prefix on the configured model,
  * then `provider` in settings.json.
  */
 export function getConfiguredProviderId(): string | undefined {
@@ -106,7 +106,7 @@ export function getConfiguredProviderId(): string | undefined {
     // Session state not initialized yet.
   }
 
-  const model = override || process.env.FINWORKER_MODEL?.trim() || settings().model
+  const model = override || process.env.HANLIN_MODEL?.trim() || settings().model
   if (model) {
     const { provider } = splitProviderModel(model)
     if (provider) return provider
@@ -134,7 +134,7 @@ let resolvingProviderId = false
 
 /** True when requests should go to a non-Anthropic provider. */
 export function isCustomProviderActive(): boolean {
-  if (process.env.FINWORKER_PROVIDER?.trim()) return true
+  if (process.env.HANLIN_PROVIDER?.trim()) return true
   if (resolvingProviderId) return false
   resolvingProviderId = true
   try {
@@ -235,7 +235,7 @@ export function listAvailableProviders(): ProviderProfile[] {
 }
 
 function resolveApiKey(profile: ProviderProfile, config: ProviderSettings | undefined): string | undefined {
-  const explicit = process.env.FINWORKER_API_KEY?.trim()
+  const explicit = process.env.HANLIN_API_KEY?.trim()
   if (explicit) return explicit
   if (config?.apiKeyEnv) {
     const value = process.env[config.apiKeyEnv]?.trim()
@@ -257,7 +257,7 @@ function resolveApiKey(profile: ProviderProfile, config: ProviderSettings | unde
  */
 export function resolveProvider(): ResolvedProvider {
   const id = getConfiguredProviderId()
-  if (!id) throw new Error('No provider configured (set FINWORKER_PROVIDER or `provider` in settings.json)')
+  if (!id) throw new Error('No provider configured (set HANLIN_PROVIDER or `provider` in settings.json)')
 
   const config = settings().providers?.[id]
   const builtin = getProviderProfile(id)
@@ -286,16 +286,16 @@ export function resolveProvider(): ResolvedProvider {
     toolSchema: config?.toolSchema ?? builtin?.toolSchema,
   }
 
-  const baseURL = (process.env.FINWORKER_BASE_URL?.trim() || profile.baseURL)?.replace(/\/+$/, '')
+  const baseURL = (process.env.HANLIN_BASE_URL?.trim() || profile.baseURL)?.replace(/\/+$/, '')
   if (!baseURL) {
     throw new Error(
-      `Provider '${id}' has no base URL — set FINWORKER_BASE_URL, or "providers.${id}.baseURL" in settings.json`,
+      `Provider '${id}' has no base URL — set HANLIN_BASE_URL, or "providers.${id}.baseURL" in settings.json`,
     )
   }
 
   const apiKey = resolveApiKey(profile, config)
   if (!apiKey && !profile.apiKeyOptional) {
-    const names = [...(profile.apiKeyEnv ?? []), 'FINWORKER_API_KEY'].join(' or ')
+    const names = [...(profile.apiKeyEnv ?? []), 'HANLIN_API_KEY'].join(' or ')
     throw new Error(`Provider '${id}' requires an API key — set ${names}`)
   }
 

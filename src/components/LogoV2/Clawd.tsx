@@ -33,7 +33,7 @@ type Segments = {
   r2R: string;
 };
 const POSES: Record<ClawdPose, Segments> = {
-  // FinWorker: a crab with both pincers raised.
+  // Hanlin: a crab with both pincers raised.
   //
   //   ▗▟▛███▜▙▖
   //    ▜█████▛

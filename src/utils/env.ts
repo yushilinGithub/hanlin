@@ -21,13 +21,13 @@ export const getGlobalClaudeFile = memoize((): string => {
     return join(getClaudeConfigHomeDir(), '.config.json')
   }
 
-  // `~/.finworker.json`, sibling to `~/.finworker/` — the same layout Claude Code uses for
+  // `~/.hanlin.json`, sibling to `~/.hanlin/` — the same layout Claude Code uses for
   // `~/.claude.json`. This file is resolved separately from the config home, so it needs
-  // its own rename; otherwise finWorker and Claude Code keep sharing global state even
+  // its own rename; otherwise Hanlin and Claude Code keep sharing global state even
   // after the config directory is split.
-  const filename = `.finworker${fileSuffixForOauthConfig()}.json`
+  const filename = `.hanlin${fileSuffixForOauthConfig()}.json`
   return join(
-    process.env.FINWORKER_CONFIG_DIR || process.env.CLAUDE_CONFIG_DIR || homedir(),
+    process.env.HANLIN_CONFIG_DIR || process.env.CLAUDE_CONFIG_DIR || homedir(),
     filename,
   )
 })

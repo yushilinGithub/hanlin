@@ -3,10 +3,10 @@ import { homedir } from 'os'
 import { join } from 'path'
 
 /**
- * Root of finWorker's own configuration, `~/.finworker`.
+ * Root of Hanlin's own configuration, `~/.hanlin`.
  *
- * Deliberately not `~/.claude`: finWorker and Claude Code would otherwise share settings,
- * credentials and history, and a finWorker-only setting such as a `provider/model` string
+ * Deliberately not `~/.claude`: Hanlin and Claude Code would otherwise share settings,
+ * credentials and history, and a Hanlin-only setting such as a `provider/model` string
  * breaks Claude Code, which has no provider layer to resolve it.
  *
  * `CLAUDE_CONFIG_DIR` is still honored so an existing setup keeps working; the function
@@ -18,12 +18,12 @@ import { join } from 'path'
 export const getClaudeConfigHomeDir = memoize(
   (): string => {
     return (
-      process.env.FINWORKER_CONFIG_DIR ??
+      process.env.HANLIN_CONFIG_DIR ??
       process.env.CLAUDE_CONFIG_DIR ??
-      join(homedir(), '.finworker')
+      join(homedir(), '.hanlin')
     ).normalize('NFC')
   },
-  () => `${process.env.FINWORKER_CONFIG_DIR ?? ''}\0${process.env.CLAUDE_CONFIG_DIR ?? ''}`,
+  () => `${process.env.HANLIN_CONFIG_DIR ?? ''}\0${process.env.CLAUDE_CONFIG_DIR ?? ''}`,
 )
 
 export function getTeamsDir(): string {

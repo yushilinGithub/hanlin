@@ -466,7 +466,7 @@ export const SettingsSchema = lazySchema(() =>
         .optional()
         .describe(
           'Model provider id (e.g. "dashscope", "deepseek", "ollama", "openai-compatible"). ' +
-            'When unset, finWorker uses Anthropic. Overridden by FINWORKER_PROVIDER. ' +
+            'When unset, Hanlin uses Anthropic. Overridden by HANLIN_PROVIDER. ' +
             'A "provider/model" value in `model` selects the provider too.',
         ),
       providers: z

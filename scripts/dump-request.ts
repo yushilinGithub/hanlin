@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Dump the exact request finWorker builds — the object returned by
+ * Dump the exact request Hanlin builds — the object returned by
  * `paramsFromContext` in src/services/api/claude.ts.
  *
  * That function is a closure inside `queryModel` and cannot be imported, but its
@@ -10,7 +10,7 @@
  *   bun scripts/dump-request.ts "your prompt"
  *   bun scripts/dump-request.ts --provider "your prompt"   # after adapter lowering
  *
- * Writes each captured request to /tmp/finworker-request-N.json and prints a summary.
+ * Writes each captured request to /tmp/hanlin-request-N.json and prints a summary.
  */
 import { spawn } from 'child_process'
 import { join } from 'path'
@@ -70,7 +70,7 @@ const server = Bun.serve({
     }
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
     captured++
-    const file = `/tmp/finworker-request-${captured}.json`
+    const file = `/tmp/hanlin-request-${captured}.json`
     await Bun.write(file, JSON.stringify(body, null, 2))
     summarize(file, body)
     return lowered ? openaiSSE(String(body.model)) : anthropicSSE(String(body.model))
@@ -124,15 +124,15 @@ function summarize(file: string, body: Record<string, unknown>): void {
 
 const env: Record<string, string> = { ...process.env as Record<string, string> }
 if (lowered) {
-  env.FINWORKER_PROVIDER = 'openai-compatible'
-  env.FINWORKER_BASE_URL = `http://localhost:${PORT}/v1`
-  env.FINWORKER_API_KEY = 'dump'
+  env.HANLIN_PROVIDER = 'openai-compatible'
+  env.HANLIN_BASE_URL = `http://localhost:${PORT}/v1`
+  env.HANLIN_API_KEY = 'dump'
 } else {
   // Force the plain Anthropic path so the captured body is pre-lowering.
-  delete env.FINWORKER_PROVIDER
+  delete env.HANLIN_PROVIDER
   env.ANTHROPIC_BASE_URL = `http://localhost:${PORT}`
   env.ANTHROPIC_API_KEY = 'sk-dump'
-  env.FINWORKER_MODEL = 'sonnet'
+  env.HANLIN_MODEL = 'sonnet'
 }
 
 const extra = process.env.DUMP_EXTRA_ARGS ? process.env.DUMP_EXTRA_ARGS.split(' ') : []

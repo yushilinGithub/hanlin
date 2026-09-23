@@ -1,8 +1,10 @@
 <div align="center">
 
-# finWorker CLI
+# 翰林 Hanlin
 
-**AI Coding Assistant & Financial Engineering Agent CLI for Development and Automation**
+**AI coding assistant and financial research agent for the terminal**
+
+*翰林 (Hànlín) — the imperial academy of scholar-advisors*
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](#tech-stack)
 [![Runtime](https://img.shields.io/badge/Runtime-Bun%20%3E%3D%201.1.0-f472b6?logo=bun&logoColor=white)](#tech-stack)
@@ -16,7 +18,9 @@
 
 ## 📖 Overview
 
-**finWorker** is an advanced CLI tool and autonomous AI agent platform designed for software engineering, financial modeling, workflow automation, and terminal interaction. Operating directly in your workspace, finWorker executes complex multi-step coding, code analysis, git workflows, financial data processing, and multi-agent task execution.
+**Hanlin** (翰林) is a CLI tool and autonomous AI agent platform for software engineering, financial research, workflow automation, and terminal interaction. Operating directly in your workspace, Hanlin executes multi-step coding, code analysis, git workflows, financial research and multi-agent task execution.
+
+It runs on Anthropic's Claude models, and equally on any OpenAI-compatible provider — self-hosted (vLLM, SGLang, Ollama) or hosted (DeepSeek, Qwen/DashScope, Moonshot, Zhipu, OpenRouter, …). Features that Anthropic implements server-side, such as web search, have their own implementation for those providers, so the agent behaves the same whichever model serves it.
 
 ### Key Highlights
 
@@ -25,6 +29,8 @@
 - **🔌 MCP Protocol Native**: Features a built-in Model Context Protocol (MCP) server for integration with Claude Desktop, VS Code Copilot, and Cursor.
 - **🤖 Multi-Agent Orchestration**: Autonomous sub-agents, task management, inter-agent messaging, and background execution.
 - **📊 Financial Engineering Integration**: Optimized for quant workflow automation, data processing, and financial API orchestration.
+- **🔎 Research-Grade Search**: One `WebSearch` tool routed to specialist sources — market news, A-share disclosures, research papers and general web search — every result dated and cited.
+- **🌏 Any Model, Any Language**: Claude or any OpenAI-compatible provider; queries and answers in Chinese or English.
 - **🛡️ Granular Permissions**: Comprehensive safety controls and approval flows for file modifications and terminal command executions.
 
 ---
@@ -40,8 +46,8 @@
 
 ```bash
 # 1. Clone the repository
-git clone -b dev https://github.com/yushilinGithub/finWorker.git
-cd finWorker
+git clone -b dev https://github.com/yushilinGithub/hanlin.git
+cd hanlin
 
 # 2. Install dependencies
 bun install
@@ -52,21 +58,68 @@ bun run build
 
 ### Usage
 
-Run finWorker CLI directly with Bun:
+Run Hanlin CLI directly with Bun:
 
 ```bash
 # Run CLI REPL
 bun run src/entrypoints/cli.tsx
 
 # Or execute built bundle
-node dist/cli.js
+node dist/cli.mjs
+
+# Ask a single question without entering the REPL
+node dist/cli.mjs -p "半导体设备最新新闻"
 ```
+
+Configuration lives in `~/.hanlin/settings.json` (user scope) and `<repo>/.claude/settings.json` (project scope).
+
+---
+
+## 🧠 Models & Providers
+
+Anthropic is the default. Any other provider is selected with `HANLIN_PROVIDER`, or by setting `model` in `~/.hanlin/settings.json` to a `provider/model` pair:
+
+```bash
+# A hosted provider — the key is read from its conventional env var
+DEEPSEEK_API_KEY=sk-… HANLIN_PROVIDER=deepseek hanlin
+
+# Any OpenAI-compatible server (vLLM, SGLang, LM Studio, …)
+HANLIN_PROVIDER=openai-compatible HANLIN_BASE_URL=http://localhost:8000/v1 \
+  HANLIN_MODEL=Qwen/Qwen2.5-Coder-32B-Instruct hanlin
+```
+
+| Variable | Purpose |
+|---|---|
+| `HANLIN_PROVIDER` | Provider id. Unset means Anthropic. |
+| `HANLIN_BASE_URL` | Overrides the provider's endpoint. |
+| `HANLIN_API_KEY` | Overrides the provider's conventional key variable. |
+| `HANLIN_MODEL` | Model to run; accepts `provider/model`. |
+| `HANLIN_SMALL_MODEL` | Cheaper model for side queries (titles, search routing). |
+
+See [docs/providers.md](docs/providers.md) for the full catalog, `/model` behavior and `settings.json` examples.
+
+---
+
+## 🔎 Search
+
+`WebSearch` takes a plain query and routes it to the sources that fit, in Chinese or English. On Anthropic models it uses Anthropic's server-side web search; on every other provider a small model picks among specialist sources and Hanlin queries them directly:
+
+| Source | Covers |
+|---|---|
+| Yahoo Finance | Company and market news by ticker, including `.SZ` / `.SS` / `.HK` listings |
+| 东方财富 Eastmoney (falling back to 新浪财经 Sina) | Chinese financial news |
+| 巨潮资讯 cninfo | A-share announcements: annual, semi-annual and quarterly reports, earnings forecasts, dividends |
+| arXiv · PubMed · OpenAlex | Preprints, biomedical literature, and published papers incl. IEEE |
+| Hugging Face · Hacker News | AI models and papers; product launches and developer discussion |
+| Tavily (optional, `TAVILY_API_KEY`) | General web and news search; also the automatic backup when the sources above return nothing |
+
+Every result carries a publish date and a link, and answers cite their sources.
 
 ---
 
 ## 🔍 MCP Server Integration
 
-finWorker ships with an embedded [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server (`mcp-server/`), allowing external AI tools (Claude Desktop, VS Code, Cursor) to interact with and explore the finWorker repository structure.
+Hanlin ships with an embedded [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server (`mcp-server/`), allowing external AI tools (Claude Desktop, VS Code, Cursor) to interact with and explore the Hanlin repository structure.
 
 ### Setting Up MCP Server
 
@@ -76,8 +129,8 @@ cd mcp-server
 npm install
 npm run build
 
-# Add to finWorker MCP registry
-bun run src/entrypoints/cli.tsx mcp add finWorker-explorer -- node ./mcp-server/dist/index.js
+# Add to Hanlin MCP registry
+bun run src/entrypoints/cli.tsx mcp add hanlin-explorer -- node ./mcp-server/dist/index.js
 ```
 
 ### Claude Desktop / VS Code Configuration
@@ -87,11 +140,11 @@ Add the server to your `mcp.json` configuration:
 ```json
 {
   "mcpServers": {
-    "finWorker-explorer": {
+    "hanlin-explorer": {
       "command": "node",
-      "args": ["/path/to/finWorker/mcp-server/dist/index.js"],
+      "args": ["/path/to/hanlin/mcp-server/dist/index.js"],
       "env": {
-        "FINWORKER_SRC_ROOT": "/path/to/finWorker/src"
+        "HANLIN_SRC_ROOT": "/path/to/hanlin/src"
       }
     }
   }
@@ -103,7 +156,7 @@ Add the server to your `mcp.json` configuration:
 ## 🏗 Architecture & Core Modules
 
 ```
-finWorker/
+hanlin/
 ├── src/
 │   ├── main.tsx                 # CLI entrypoint & Commander.js parser
 │   ├── QueryEngine.ts           # Core LLM streaming API caller
@@ -125,7 +178,7 @@ finWorker/
 
 ### 1. Agent Tool System (`src/tools/`)
 
-finWorker provides a rich set of built-in tools for agent execution:
+Hanlin provides a rich set of built-in tools for agent execution:
 
 | Category | Tools | Description |
 |---|---|---|
@@ -165,6 +218,7 @@ Interactive terminal commands available inside the REPL (`/` prefix):
 For in-depth guides, see the [`docs/`](docs/) directory:
 
 - [Architecture Guide](docs/architecture.md) — Core pipeline, state management, and data flow.
+- [Model Providers](docs/providers.md) — Running Hanlin on Claude or any OpenAI-compatible provider.
 - [Tools Catalog](docs/tools.md) — Detailed specifications for all agent tools.
 - [Commands Reference](docs/commands.md) — Documentation for slash commands.
 - [Subsystems Overview](docs/subsystems.md) — In-depth breakdown of Bridge, MCP, and Permissions.

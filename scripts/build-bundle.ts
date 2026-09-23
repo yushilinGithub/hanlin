@@ -150,13 +150,13 @@ const buildOptions: esbuild.BuildOptions = {
   // process.env.USER_TYPE — eliminates 'ant' (Anthropic-internal) code branches
   define: {
     'MACRO.VERSION': JSON.stringify(version),
-    'MACRO.PACKAGE_URL': JSON.stringify('finworker'),
+    'MACRO.PACKAGE_URL': JSON.stringify('hanlin'),
     'MACRO.ISSUES_EXPLAINER': JSON.stringify(
-      'report issues at https://github.com/yushilinGithub/finWorker/issues'
+      'report issues at https://github.com/yushilinGithub/hanlin/issues'
     ),
     'MACRO.NATIVE_PACKAGE_URL': 'undefined',
     'MACRO.FEEDBACK_CHANNEL': JSON.stringify(
-      'https://github.com/yushilinGithub/finWorker/issues'
+      'https://github.com/yushilinGithub/hanlin/issues'
     ),
     'MACRO.BUILD_TIME': JSON.stringify(new Date().toISOString()),
     'MACRO.VERSION_CHANGELOG': JSON.stringify(''),

@@ -2,9 +2,9 @@
 /**
  * Drive WebSearchTool.call() directly, bypassing the agent loop.
  *
- *   FINWORKER_MODEL=sonnet bun scripts/test-websearch.ts "your query"
+ *   HANLIN_MODEL=sonnet bun scripts/test-websearch.ts "your query"
  *
- * On an Anthropic provider (`FINWORKER_MODEL=sonnet`), call() issues a nested model request
+ * On an Anthropic provider (`HANLIN_MODEL=sonnet`), call() issues a nested model request
  * with the server-side `web_search_20250305` tool. On any other provider (settings.model),
  * the small model picks specialist sources (Yahoo, arXiv, PubMed, …) as function tools and
  * call() runs them locally.

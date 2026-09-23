@@ -1,7 +1,7 @@
 /**
  * Types for the pluggable model-provider layer.
  *
- * finWorker's internal data model is the Anthropic wire format (see
+ * Hanlin's internal data model is the Anthropic wire format (see
  * `src/types/message.ts`), so a provider is not a parallel type universe — it is an
  * adapter that accepts an Anthropic request and produces an Anthropic-shaped response.
  * Only the bytes on the wire differ.
@@ -23,7 +23,7 @@ export type ToolSchemaDialect =
   /** Moonshot/Kimi: additionally strips `prefixItems` and tuple-form `items`. */
   | 'restricted'
 
-/** A provider deployment finWorker knows how to talk to. */
+/** A provider deployment Hanlin knows how to talk to. */
 export type ProviderProfile = {
   /** Stable id, used in settings and in `provider/model` strings. */
   id: string
@@ -46,7 +46,7 @@ export type ProviderProfile = {
   /**
    * The models.dev id for this same endpoint, when it differs from ours.
    *
-   * finWorker's short ids predate the catalog and are what users have configured, so they
+   * Hanlin's short ids predate the catalog and are what users have configured, so they
    * stay — but model metadata, pricing and limits are looked up under this id.
    */
   catalogId?: string

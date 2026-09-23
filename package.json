@@ -1,13 +1,13 @@
 {
-  "name": "finworker",
+  "name": "hanlin",
   "version": "2.0.0",
-  "description": "finWorker CLI — AI Coding Assistant for Financial Engineering & Development.",
+  "description": "Hanlin CLI — AI Coding Assistant for Financial Engineering & Development.",
   "license": "MIT",
   "private": true,
   "type": "module",
   "main": "src/entrypoints/cli.tsx",
   "bin": {
-    "finworker": "src/entrypoints/cli.tsx"
+    "hanlin": "src/entrypoints/cli.tsx"
   },
   "scripts": {
     "build": "bun scripts/build-bundle.ts",

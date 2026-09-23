@@ -109,7 +109,7 @@ export class AnthropicEventBuilder {
       sse('content_block_start', {
         type: 'content_block_start',
         index: this.reasoningIndex,
-        // No signature: open models do not issue one, and finWorker initializes the field
+        // No signature: open models do not issue one, and Hanlin initializes the field
         // to '' at content_block_start anyway.
         content_block: { type: 'thinking', thinking: '', signature: '' },
       }),

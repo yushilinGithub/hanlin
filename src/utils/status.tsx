@@ -284,7 +284,7 @@ export function buildAPIProviderProperties(): Property[] {
     // built-in profile table does not; without it /status shows no base URL for them.
     const baseUrl =
       resolveProviderSafely()?.baseURL ||
-      process.env.FINWORKER_BASE_URL ||
+      process.env.HANLIN_BASE_URL ||
       getProviderProfile(getConfiguredProviderId() ?? '')?.baseURL;
     if (baseUrl) {
       properties.push({

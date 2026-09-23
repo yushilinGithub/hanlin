@@ -191,7 +191,7 @@ export const WebSearchTool = buildTool({
   shouldDefer: true,
   async description(input) {
     return isCustomProviderActive()
-      ? `FinWorker wants to search for: ${input.query}`
+      ? `Hanlin wants to search for: ${input.query}`
       : `Claude wants to search the web for: ${input.query}`
   },
   userFacingName() {

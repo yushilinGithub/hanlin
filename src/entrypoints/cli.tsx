@@ -37,7 +37,7 @@ async function main(): Promise<void> {
   if (args.length === 1 && (args[0] === '--version' || args[0] === '-v' || args[0] === '-V')) {
     // MACRO.VERSION is inlined at build time
     // biome-ignore lint/suspicious/noConsole:: intentional console output
-    console.log(`${MACRO.VERSION} (FinWorker)`);
+    console.log(`${MACRO.VERSION} (Hanlin)`);
     return;
   }
 
@@ -290,7 +290,7 @@ async function main(): Promise<void> {
   } = await import('../utils/earlyInput.js');
   startCapturingEarlyInput();
 
-  // Seed ~/.finworker from ~/.claude on first run. This has to happen before main.js is
+  // Seed ~/.hanlin from ~/.claude on first run. This has to happen before main.js is
   // even imported: module evaluation there reads settings, and by the time the migration
   // runner in main.tsx executes, an empty config directory has already been loaded.
   const {

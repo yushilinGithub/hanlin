@@ -1,13 +1,13 @@
 ---
-name: finworker-skill
-description: Development conventions and architecture guide for the finWorker CLI repository.
+name: hanlin-skill
+description: Development conventions and architecture guide for the Hanlin CLI repository.
 ---
 
-# finWorker — Repository Skill
+# Hanlin — Repository Skill
 
 ## Project Overview
 
-finWorker is an AI CLI tool for interacting with LLM models directly from the terminal. It supports file editing, shell commands, git workflows, code review, multi-agent coordination, IDE integration (VS Code, JetBrains), and Model Context Protocol (MCP).
+Hanlin is an AI CLI tool for interacting with LLM models directly from the terminal. It supports file editing, shell commands, git workflows, code review, multi-agent coordination, IDE integration (VS Code, JetBrains), and Model Context Protocol (MCP).
 
 **Codebase:** ~1,900 files, 512,000+ lines of TypeScript under `src/`.
 

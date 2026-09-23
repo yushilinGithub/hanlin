@@ -103,7 +103,7 @@ const TEAMMATE_ENV_VARS = [
   'ANTHROPIC_BASE_URL',
   // Config directory override — both names, or a teammate silently falls back to the
   // default config home while the parent uses an overridden one.
-  'FINWORKER_CONFIG_DIR',
+  'HANLIN_CONFIG_DIR',
   'CLAUDE_CONFIG_DIR',
   // CCR marker — teammates need this for CCR-aware code paths. Auth finds
   // its own way via /home/claude/.claude/remote/.oauth_token regardless;

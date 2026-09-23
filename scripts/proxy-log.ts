@@ -7,7 +7,7 @@
  * consume internally and never surface — can be inspected.
  *
  *   bun scripts/proxy-log.ts &
- *   ANTHROPIC_BASE_URL=http://localhost:8919 FINWORKER_MODEL=sonnet \
+ *   ANTHROPIC_BASE_URL=http://localhost:8919 HANLIN_MODEL=sonnet \
  *     bun scripts/test-websearch.ts "your query"
  *
  * Writes /tmp/anthropic-{N}-request.json and /tmp/anthropic-{N}-response.sse.

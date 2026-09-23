@@ -1,6 +1,6 @@
 ---
 name: repository-agent
-description: Agent operating guide for finWorker.
+description: Agent operating guide for Hanlin.
 ---
 
 # Agent

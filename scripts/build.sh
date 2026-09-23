@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────
-# build.sh — Minimal build / check script for FinWorker
+# build.sh — Minimal build / check script for Hanlin
 # ─────────────────────────────────────────────────────────────
 # Usage:
 #   ./scripts/build.sh          # install + typecheck + lint

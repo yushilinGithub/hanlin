@@ -1,6 +1,6 @@
-# FinWorker
+# Hanlin
 
-FinWorker is a CLI tool and AI agent platform for software engineering and financial analysis, forked from Claude Code and rebranded.
+Hanlin is a CLI tool and AI agent platform for software engineering and financial analysis, forked from Claude Code and rebranded.
 
 ## Build & Run
 
@@ -48,7 +48,7 @@ FinWorker is a CLI tool and AI agent platform for software engineering and finan
 
 ## Key Branding
 
-- Product name: **FinWorker** (not Claude Code)
-- CLI command: `finworker`
-- Package name: `finworker`
-- Issues: https://github.com/yushilinGithub/finWorker/issues
+- Product name: **Hanlin** (not Claude Code)
+- CLI command: `hanlin`
+- Package name: `hanlin`
+- Issues: https://github.com/yushilinGithub/hanlin/issues

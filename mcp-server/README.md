@@ -1,16 +1,16 @@
-# finWorker Explorer — MCP Server
+# Hanlin Explorer — MCP Server
 
-A standalone [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that lets any MCP-compatible client explore the finWorker codebase. Supports **STDIO**, **Streamable HTTP**, and **SSE** transports.
+A standalone [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that lets any MCP-compatible client explore the Hanlin codebase. Supports **STDIO**, **Streamable HTTP**, and **SSE** transports.
 
 ## What It Does
 
-Exposes 8 tools, 3 resources, and 5 prompts for navigating the finWorker codebase. Package name: `finworker-explorer`.
+Exposes 8 tools, 3 resources, and 5 prompts for navigating the Hanlin codebase. Package name: `hanlin-explorer`.
 
 ### Transports
 
 | Transport | Endpoint | Best For |
 |-----------|----------|----------|
-| **STDIO** | `node dist/index.js` | Claude Desktop, local finWorker CLI, VS Code |
+| **STDIO** | `node dist/index.js` | Claude Desktop, local Hanlin CLI, VS Code |
 | **Streamable HTTP** | `POST/GET /mcp` | Modern MCP clients, remote hosting |
 | **Legacy SSE** | `GET /sse` + `POST /messages` | Older MCP clients |
 
@@ -31,10 +31,10 @@ Exposes 8 tools, 3 resources, and 5 prompts for navigating the finWorker codebas
 
 | URI | Description |
 |-----|-------------|
-| `finworker://architecture` | README / architecture overview |
-| `finworker://tools` | Tool registry (JSON) |
-| `finworker://commands` | Command registry (JSON) |
-| `finworker://source/{path}` | Any source file (template) |
+| `hanlin://architecture` | README / architecture overview |
+| `hanlin://tools` | Tool registry (JSON) |
+| `hanlin://commands` | Command registry (JSON) |
+| `hanlin://source/{path}` | Any source file (template) |
 
 ### Prompts
 
@@ -42,7 +42,7 @@ Exposes 8 tools, 3 resources, and 5 prompts for navigating the finWorker codebas
 |--------|-------------|
 | `explain_tool` | Deep-dive explanation of a specific tool's purpose, schema, permissions, and flow |
 | `explain_command` | Explanation of a specific slash command's behavior and implementation |
-| `architecture_overview` | Guided tour of the full finWorker architecture |
+| `architecture_overview` | Guided tour of the full Hanlin architecture |
 | `how_does_it_work` | Explain a feature/subsystem (permissions, MCP, bridge, etc.) |
 | `compare_tools` | Side-by-side comparison of two tools |
 

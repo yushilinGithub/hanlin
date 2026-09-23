@@ -7,8 +7,7 @@ import { stringWidth } from '../../ink/stringWidth.js';
 import { getLayoutMode, calculateLayoutDimensions, calculateOptimalLeftWidth, formatWelcomeMessage, truncatePath, getRecentActivitySync, getRecentReleaseNotesSync, getLogoDisplayData } from '../../utils/logoV2Utils.js';
 import { truncate } from '../../utils/format.js';
 import { getDisplayPath } from '../../utils/file.js';
-import { Clawd } from './Clawd.js';
-import { FinWorkerWordmark } from './FinWorkerWordmark.js';
+import { HANLIN_NAME, HanlinWordmark } from './HanlinWordmark.js';
 import { FeedColumn } from './FeedColumn.js';
 import { createRecentActivityFeed, createWhatsNewFeed, createProjectOnboardingFeed, createGuestPassesFeed } from './feedConfigs.js';
 import { getGlobalConfig, saveGlobalConfig } from 'src/utils/config.js';
@@ -249,8 +248,8 @@ export function LogoV2() {
   }
   const layoutMode = getLayoutMode(columns);
   const userTheme = resolveThemeSetting(getGlobalConfig().theme);
-  const borderTitle = ` ${color("claude", userTheme)("FinWorker")} ${color("inactive", userTheme)(`v${version}`)} `;
-  const compactBorderTitle = color("claude", userTheme)(" FinWorker ");
+  const borderTitle = ` ${color("claude", userTheme)(HANLIN_NAME)} ${color("inactive", userTheme)(`v${version}`)} `;
+  const compactBorderTitle = color("claude", userTheme)(` ${HANLIN_NAME} `);
   if (layoutMode === "compact") {
     let welcomeMessage = formatWelcomeMessage(username);
     if (stringWidth(welcomeMessage) > columns - 4) {
@@ -280,7 +279,7 @@ export function LogoV2() {
     }
     let t12;
     if ($[34] === Symbol.for("react.memo_cache_sentinel")) {
-      t12 = <Box marginY={1}><Clawd /></Box>;
+      t12 = null;
       $[34] = t12;
     } else {
       t12 = $[34];
@@ -327,7 +326,7 @@ export function LogoV2() {
       t18 = $[42];
       t19 = $[43];
     }
-    return <><OffscreenFreeze><FinWorkerWordmark welcomeMessage={welcomeMessage} version={version} modelDisplayName={modelDisplayName} billingType={billingType} cwdLine={agentName ? `@${agentName} · ${truncatedCwd}` : truncatedCwd} columns={columns} activities={activities} /></OffscreenFreeze>{t14}{t15}{t16}{t17}{t18}{t19}</>;
+    return <><OffscreenFreeze><HanlinWordmark welcomeMessage={welcomeMessage} version={version} modelDisplayName={modelDisplayName} billingType={billingType} cwdLine={agentName ? `@${agentName} · ${truncatedCwd}` : truncatedCwd} columns={columns} activities={activities} /></OffscreenFreeze>{t14}{t15}{t16}{t17}{t18}{t19}</>;
   }
   const welcomeMessage_0 = formatWelcomeMessage(username);
   const modelLine = !process.env.IS_DEMO && config.oauthAccount?.organizationName ? `${modelDisplayName} · ${billingType} · ${config.oauthAccount.organizationName}` : `${modelDisplayName} · ${billingType}`;
@@ -371,7 +370,7 @@ export function LogoV2() {
   }
   let t19;
   if ($[48] === Symbol.for("react.memo_cache_sentinel")) {
-    t19 = <Clawd />;
+    t19 = null;
     $[48] = t19;
   } else {
     t19 = $[48];
@@ -432,9 +431,9 @@ export function LogoV2() {
   } else {
     t26 = $[67];
   }
-  // FinWorker start screen. Replaces the bordered two-column logo box; the
+  // Hanlin start screen. Replaces the bordered two-column logo box; the
   // notices below (debug, tmux, announcements, sandbox) are untouched.
-  const t27 = <FinWorkerWordmark welcomeMessage={welcomeMessage_0} version={version} modelDisplayName={modelDisplayName} billingType={billingType} organizationName={!process.env.IS_DEMO ? config.oauthAccount?.organizationName : undefined} cwdLine={cwdLine} columns={columns} activities={activities} />;
+  const t27 = <HanlinWordmark welcomeMessage={welcomeMessage_0} version={version} modelDisplayName={modelDisplayName} billingType={billingType} organizationName={!process.env.IS_DEMO ? config.oauthAccount?.organizationName : undefined} cwdLine={cwdLine} columns={columns} activities={activities} />;
   let t28;
   if ($[72] !== T0 || $[73] !== t27) {
     t28 = <T0>{t27}</T0>;

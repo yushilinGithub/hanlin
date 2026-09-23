@@ -28,7 +28,7 @@ export function parsePubmedDate(value: string | undefined): string | undefined {
 }
 
 function keyParam(): Record<string, string | undefined> {
-  return { api_key: process.env.NCBI_API_KEY || undefined, tool: 'finworker' }
+  return { api_key: process.env.NCBI_API_KEY || undefined, tool: 'hanlin' }
 }
 
 export const pubmed: SearchSource = {

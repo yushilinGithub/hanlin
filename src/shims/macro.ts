@@ -13,11 +13,11 @@ try {
   version = pkg.version || version
 } catch {}
 
-const ISSUES_URL = 'https://github.com/yushilinGithub/finWorker/issues'
+const ISSUES_URL = 'https://github.com/yushilinGithub/hanlin/issues'
 
 const MACRO_OBJ = {
   VERSION: version,
-  PACKAGE_URL: 'finworker',
+  PACKAGE_URL: 'hanlin',
   NATIVE_PACKAGE_URL: undefined as string | undefined,
   ISSUES_EXPLAINER: `report issues at ${ISSUES_URL}`,
   FEEDBACK_CHANNEL: ISSUES_URL,

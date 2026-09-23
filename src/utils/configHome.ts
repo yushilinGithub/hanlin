@@ -7,7 +7,7 @@ import { getClaudeConfigHomeDir } from './envUtils.js'
 /**
  * Live state belonging to a *running* Claude Code process.
  *
- * Seeding these would hand finWorker a lock file pointing at someone else's daemon and an
+ * Seeding these would hand Hanlin a lock file pointing at someone else's daemon and an
  * IDE socket it does not own, so it would believe services are running that are not its
  * own.
  */
@@ -30,10 +30,10 @@ function legacyGlobalConfigFile(): string {
 }
 
 /**
- * Seed finWorker's config directory from Claude Code's, once.
+ * Seed Hanlin's config directory from Claude Code's, once.
  *
- * finWorker forked from Claude Code and used to share `~/.claude`, which meant a
- * finWorker-only setting — a `provider/model` string, say — would break Claude Code, which
+ * Hanlin forked from Claude Code and used to share `~/.claude`, which meant a
+ * Hanlin-only setting — a `provider/model` string, say — would break Claude Code, which
  * has no provider layer to resolve it. The directories are now separate; this copies an
  * existing setup across on first run so nobody has to reconfigure by hand.
  *
@@ -48,7 +48,7 @@ export function ensureConfigHomeSeeded(): void {
     const target = getClaudeConfigHomeDir()
     const source = legacyConfigHome()
 
-    // Nothing to do if finWorker already has a home, or if this *is* the legacy path
+    // Nothing to do if Hanlin already has a home, or if this *is* the legacy path
     // because the user pointed CLAUDE_CONFIG_DIR at it.
     if (existsSync(target) || target === source || !existsSync(source)) {
       seedGlobalConfigFile()
@@ -58,11 +58,11 @@ export function ensureConfigHomeSeeded(): void {
     // Said before the copy, not after: this is synchronous and a long-lived Claude Code
     // install can be several GB, so the CLI would otherwise sit silent with no explanation.
     // biome-ignore lint/suspicious/noConsole: runs before the UI exists
-    console.error(`finWorker: first run — copying ${source} to ${target}…`)
+    console.error(`Hanlin: first run — copying ${source} to ${target}…`)
 
     // Copied to a sibling and renamed into place. cpSync is not atomic, and a throw
     // partway (unreadable file, dangling symlink, ENOSPC) would otherwise leave a
-    // half-populated ~/.finworker that the existsSync guard treats as finished — a
+    // half-populated ~/.hanlin that the existsSync guard treats as finished — a
     // silently truncated config that can never re-seed.
     const staging = `${target}.seeding.${process.pid}`
     rmSync(staging, { recursive: true, force: true })
@@ -85,14 +85,14 @@ export function ensureConfigHomeSeeded(): void {
 
     // biome-ignore lint/suspicious/noConsole: runs before the UI exists
     console.error(
-      `finWorker: done. The two are independent from now on; ${source} is no longer read.`,
+      `Hanlin: done. The two are independent from now on; ${source} is no longer read.`,
     )
   } catch (error) {
-    // A failed seed means finWorker starts with default settings — worse than inheriting
+    // A failed seed means Hanlin starts with default settings — worse than inheriting
     // them, but not a reason to refuse to launch. Said out loud so it is not a silent
     // downgrade, and the staging dir is gone so the next launch retries.
     // biome-ignore lint/suspicious/noConsole: runs before the UI exists
-    console.error(`finWorker: could not seed config directory (${(error as Error).message}). Starting with defaults.`)
+    console.error(`Hanlin: could not seed config directory (${(error as Error).message}). Starting with defaults.`)
   }
 }
 
@@ -103,7 +103,7 @@ export function ensureConfigHomeSeeded(): void {
 function seedGlobalConfigFile(): void {
   try {
     const source = legacyGlobalConfigFile()
-    // Resolved rather than hardcoded: the file follows FINWORKER_CONFIG_DIR /
+    // Resolved rather than hardcoded: the file follows HANLIN_CONFIG_DIR /
     // CLAUDE_CONFIG_DIR when either is set.
     const target = getGlobalClaudeFile()
     if (existsSync(target) || target === source || !existsSync(source)) return

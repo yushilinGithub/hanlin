@@ -14,13 +14,13 @@ const AGENT_SDK_PREFIX = `You are a Claude agent, built on Anthropic's Claude Ag
 // merely branding — they are the cache key for Anthropic's server-side prefix cache, so
 // they must stay byte-identical there — but telling an open-weight model it is Claude is
 // simply false, and the model may act on it.
-const FINWORKER_PREFIX = `You are FinWorker, a CLI agent for software engineering and financial analysis.`
+const HANLIN_PREFIX = `You are Hanlin (翰林), a CLI agent for software engineering and financial analysis.`
 
 const CLI_SYSPROMPT_PREFIX_VALUES = [
   DEFAULT_PREFIX,
   AGENT_SDK_CLAUDE_CODE_PRESET_PREFIX,
   AGENT_SDK_PREFIX,
-  FINWORKER_PREFIX,
+  HANLIN_PREFIX,
 ] as const
 
 export type CLISyspromptPrefix = (typeof CLI_SYSPROMPT_PREFIX_VALUES)[number]
@@ -39,7 +39,7 @@ export function getCLISyspromptPrefix(options?: {
 }): CLISyspromptPrefix {
   const apiProvider = getAPIProvider()
   if (apiProvider === 'custom') {
-    return FINWORKER_PREFIX
+    return HANLIN_PREFIX
   }
   if (apiProvider === 'vertex') {
     return DEFAULT_PREFIX

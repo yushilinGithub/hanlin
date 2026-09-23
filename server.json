@@ -1,10 +1,10 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "finworker-explorer",
-  "title": "finWorker Explorer MCP",
-  "description": "Explore the finWorker CLI codebase — browse tools, commands, and architecture.",
+  "name": "hanlin-explorer",
+  "title": "Hanlin Explorer MCP",
+  "description": "Explore the Hanlin CLI codebase — browse tools, commands, and architecture.",
   "repository": {
-    "url": "https://github.com/yushilinGithub/finWorker",
+    "url": "https://github.com/yushilinGithub/hanlin",
     "source": "github",
     "subfolder": "mcp-server"
   },
@@ -13,7 +13,7 @@
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "finworker-explorer",
+      "identifier": "hanlin-explorer",
       "version": "1.1.0",
       "transport": {
         "type": "stdio"

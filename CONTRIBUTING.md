@@ -1,10 +1,10 @@
-# Contributing to finWorker
+# Contributing to Hanlin
 
-Thanks for your interest in contributing to finWorker!
+Thanks for your interest in contributing to Hanlin!
 
 ## What This Is
 
-finWorker is an open-source AI coding assistant CLI and Financial Engineering Worker. Contributions to core functionality, documentation, tools, and testing infrastructure are welcome.
+Hanlin is an open-source AI coding assistant CLI and Financial Engineering Worker. Contributions to core functionality, documentation, tools, and testing infrastructure are welcome.
 
 ## What You Can Contribute
 
@@ -24,8 +24,8 @@ finWorker is an open-source AI coding assistant CLI and Financial Engineering Wo
 ### Setup
 
 ```bash
-git clone -b dev https://github.com/yushilinGithub/finWorker.git
-cd finWorker
+git clone -b dev https://github.com/yushilinGithub/hanlin.git
+cd Hanlin
 bun install
 ```
 
