@@ -104,19 +104,39 @@ const GATEWAY_HOST_SUFFIXES: Partial<Record<KnownGateway, string[]>> = {
   ],
 }
 
+/**
+ * Header names, lowercased, from either a Headers instance or the plain object
+ * the Anthropic SDK attaches to APIError (`error.headers`) — the two shapes
+ * differ by SDK version, and calling forEach on the plain one throws.
+ */
+export function headerNames(headers?: HeadersLike): string[] {
+  if (!headers) return []
+  // [name, value] pairs — also a valid HeadersInit, and Array#forEach would
+  // hand the callback (element, index), breaking the Headers-shaped branch.
+  if (Array.isArray(headers)) {
+    return headers.map(entry => String((entry as [string, unknown])[0]).toLowerCase())
+  }
+  if (typeof (headers as globalThis.Headers).forEach === 'function') {
+    const names: string[] = []
+    ;(headers as globalThis.Headers).forEach((_, key) => names.push(key.toLowerCase()))
+    return names
+  }
+  return Object.keys(headers as Record<string, unknown>).map(key => key.toLowerCase())
+}
+
+type HeadersLike = globalThis.Headers | Record<string, unknown> | [string, unknown][]
+
 function detectGateway({
   headers,
   baseUrl,
 }: {
-  headers?: globalThis.Headers
+  headers?: HeadersLike
   baseUrl?: string
 }): KnownGateway | undefined {
   if (headers) {
-    // Header names are already lowercase from the Headers API
-    const headerNames: string[] = []
-    headers.forEach((_, key) => headerNames.push(key))
+    const headerNamesList = headerNames(headers)
     for (const [gw, { prefixes }] of Object.entries(GATEWAY_FINGERPRINTS)) {
-      if (prefixes.some(p => headerNames.some(h => h.startsWith(p)))) {
+      if (prefixes.some(p => headerNamesList.some(h => h.startsWith(p)))) {
         return gw as KnownGateway
       }
     }
