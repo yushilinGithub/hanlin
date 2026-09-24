@@ -47,11 +47,11 @@ const ANTHROPIC_VALUE = '__anthropic'
 
 /**
  * Providers offered by `/model`, besides the hand-written Claude row. The catalog
- * knows ~200; listing them all buries the few that are actually set up here. Add
- * an id (or prefix) to offer another.
+ * knows ~200 and most would just read "needs SOME_API_KEY", so this lists the ones
+ * worth showing. Add an id here to offer another.
  */
 function isOfferedProvider(id: string): boolean {
-  return id === 'openrouter' || id.startsWith('alibaba')
+  return id === 'alibaba-cn' || id === 'openrouter'
 }
 
 function renderModelLabel(model: string | null): string {
