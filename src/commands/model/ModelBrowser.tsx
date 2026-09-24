@@ -45,6 +45,15 @@ type Step = { kind: 'models' } | { kind: 'providers' } | { kind: 'provider'; pro
 /** Sentinel for the hand-written Anthropic row in the provider list. */
 const ANTHROPIC_VALUE = '__anthropic'
 
+/**
+ * Providers offered by `/model`, besides the hand-written Claude row. The catalog
+ * knows ~200; listing them all buries the few that are actually set up here. Add
+ * an id (or prefix) to offer another.
+ */
+function isOfferedProvider(id: string): boolean {
+  return id === 'openrouter' || id.startsWith('alibaba')
+}
+
 function renderModelLabel(model: string | null): string {
   const rendered = renderDefaultModelSetting(model ?? getDefaultMainLoopModelSetting())
   return model === null ? `${rendered} (default)` : rendered
@@ -157,7 +166,7 @@ export function ModelBrowser({ onDone }: Props): React.ReactNode {
       description: active === undefined ? 'in use · Opus · Sonnet · Haiku' : 'Opus · Sonnet · Haiku',
     }
     const rest = Object.values(getCatalog())
-      .filter(p => p.api && p.id !== 'anthropic' && getCatalogModelsFor(p.id).length > 0)
+      .filter(p => p.api && isOfferedProvider(p.id) && getCatalogModelsFor(p.id).length > 0)
       .map(p => ({
         value: p.id,
         label: p.name ?? p.id,
