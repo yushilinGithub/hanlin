@@ -10,7 +10,7 @@ import { useKeybindings } from '../keybindings/useKeybinding.js';
 import { useAppState, useSetAppState } from '../state/AppState.js';
 import { convertEffortValueToLevel, type EffortLevel, getDefaultEffortForModel, modelSupportsEffort, modelSupportsMaxEffort, resolvePickerEffortPersistence, toPersistableEffort } from '../utils/effort.js';
 import { getDefaultMainLoopModel, type ModelSetting, modelDisplayString, parseUserSpecifiedModel } from '../utils/model/model.js';
-import { getPickerModelOptions } from '../utils/model/modelOptions.js';
+import { getAnthropicPickerOptions, getPickerModelOptions } from '../utils/model/modelOptions.js';
 import { getSettingsForSource, updateSettingsForSource } from '../utils/settings/settings.js';
 import { ConfigurableShortcutHint } from './ConfigurableShortcutHint.js';
 import { Select } from './CustomSelect/index.js';
@@ -27,6 +27,8 @@ export type Props = {
   showFastModeNotice?: boolean;
   /** Overrides the dim header line below "Select model". */
   headerText?: string;
+  /** Show only Anthropic's named tiers (the Claude branch of provider-first /model). */
+  anthropicOnly?: boolean;
   /**
    * When true, skip writing effortLevel to userSettings on selection.
    * Used by the assistant installer wizard where the model choice is
@@ -37,7 +39,7 @@ export type Props = {
 };
 const NO_PREFERENCE = '__NO_PREFERENCE__';
 export function ModelPicker(t0) {
-  const $ = _c(82);
+  const $ = _c(83);
   const {
     initial,
     sessionModel,
@@ -46,7 +48,8 @@ export function ModelPicker(t0) {
     isStandaloneCommand,
     showFastModeNotice,
     headerText,
-    skipSettingsWrite
+    skipSettingsWrite,
+    anthropicOnly
   } = t0;
   const setAppState = useSetAppState();
   const exitState = useExitOnCtrlCDWithKeybindings();
@@ -66,9 +69,10 @@ export function ModelPicker(t0) {
   const [effort, setEffort] = useState(t1);
   const t2 = isFastMode ?? false;
   let t3;
-  if ($[2] !== t2) {
-    t3 = getPickerModelOptions(t2);
+  if ($[2] !== t2 || $[80] !== anthropicOnly) {
+    t3 = anthropicOnly ? getAnthropicPickerOptions(Boolean(t2)) : getPickerModelOptions(Boolean(t2));
     $[2] = t2;
+    $[80] = anthropicOnly;
     $[3] = t3;
   } else {
     t3 = $[3];

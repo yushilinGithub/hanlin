@@ -639,6 +639,15 @@ export function getModelOptions(fastMode = false): ModelOption[] {
  * Only `ModelPicker` should call this — the section headers are `disabled` rows and the
  * browse row is a sentinel, neither of which is a model id.
  */
+/**
+ * Just Anthropic's named tiers, for the Claude entry of the provider-first `/model`
+ * flow. No provider sections and no browse row — choosing a provider happens one
+ * step up.
+ */
+export function getAnthropicPickerOptions(fastMode = false): ModelOption[] {
+  return dropEmptySections([...getAnthropicModelOptions(fastMode)])
+}
+
 export function getPickerModelOptions(fastMode = false): ModelOption[] {
   const catalog = filterModelOptionsByAllowlist(getReachableProviderOptions())
 

@@ -42,6 +42,9 @@ type Props = {
 
 type Step = { kind: 'models' } | { kind: 'providers' } | { kind: 'provider'; providerId: string }
 
+/** Sentinel for the hand-written Anthropic row in the provider list. */
+const ANTHROPIC_VALUE = '__anthropic'
+
 function renderModelLabel(model: string | null): string {
   const rendered = renderDefaultModelSetting(model ?? getDefaultMainLoopModelSetting())
   return model === null ? `${rendered} (default)` : rendered
@@ -71,7 +74,7 @@ function missingKeyHint(model: string | null): string | undefined {
  * the catalog in two further steps. Every path ends in `applyModel`.
  */
 export function ModelBrowser({ onDone }: Props): React.ReactNode {
-  const [step, setStep] = useState<Step>({ kind: 'models' })
+  const [step, setStep] = useState<Step>({ kind: 'providers' })
   // useAppState is untyped compiled output, so the selector result needs narrowing here.
   const mainLoopModel = useAppState((s: AppState) => s.mainLoopModel) as string | null
   const mainLoopModelForSession = useAppState(
@@ -146,8 +149,15 @@ export function ModelBrowser({ onDone }: Props): React.ReactNode {
   const providerOptions = useMemo(() => {
     const reachable = new Set(listAvailableProviders().map(p => p.id))
     const active = getConfiguredProviderId()
-    return Object.values(getCatalog())
-      .filter(p => p.api && getCatalogModelsFor(p.id).length > 0)
+    // Anthropic is listed by hand: its models are chosen as named tiers
+    // (Opus/Sonnet/Haiku, with billing notes) by ModelPicker, not as catalog ids.
+    const anthropic = {
+      value: ANTHROPIC_VALUE,
+      label: 'Claude (Anthropic)',
+      description: active === undefined ? 'in use · Opus · Sonnet · Haiku' : 'Opus · Sonnet · Haiku',
+    }
+    const rest = Object.values(getCatalog())
+      .filter(p => p.api && p.id !== 'anthropic' && getCatalogModelsFor(p.id).length > 0)
       .map(p => ({
         value: p.id,
         label: p.name ?? p.id,
@@ -162,6 +172,7 @@ export function ModelBrowser({ onDone }: Props): React.ReactNode {
         const br = reachable.has(b.value) ? 0 : 1
         return ar !== br ? ar - br : a.label.localeCompare(b.label)
       })
+    return [anthropic, ...rest]
   }, [])
 
   if (step.kind === 'providers') {
@@ -170,11 +181,20 @@ export function ModelBrowser({ onDone }: Props): React.ReactNode {
         <Text color="remember" bold>
           Select provider
         </Text>
-        <Text dimColor>{providerOptions.length} providers · Esc to go back</Text>
+        <Text dimColor>
+          {providerOptions.length} providers · current: {renderModelLabel(mainLoopModel)} · Esc to
+          exit
+        </Text>
         <Select
           options={providerOptions}
-          onChange={(providerId: string) => setStep({ kind: 'provider', providerId })}
-          onCancel={() => setStep({ kind: 'models' })}
+          onChange={(providerId: string) =>
+            setStep(
+              providerId === ANTHROPIC_VALUE
+                ? { kind: 'models' }
+                : { kind: 'provider', providerId },
+            )
+          }
+          onCancel={handleCancel}
           visibleOptionCount={12}
         />
       </Box>
@@ -216,8 +236,9 @@ export function ModelBrowser({ onDone }: Props): React.ReactNode {
       initial={mainLoopModel}
       sessionModel={mainLoopModelForSession}
       onSelect={handlePickerSelect}
-      onCancel={handleCancel}
+      onCancel={() => setStep({ kind: 'providers' })}
       isStandaloneCommand
+      anthropicOnly
       showFastModeNotice={showFastModeNotice}
     />
   )
