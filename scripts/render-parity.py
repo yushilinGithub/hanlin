@@ -81,6 +81,27 @@ def capture(cmd: list[str]) -> list[str]:
     return [row.rstrip() for row in screen.display]
 
 
+def duplicate_rows(rows: list[str]) -> list[tuple[int, str]]:
+    """Adjacent list rows that differ only in the pointer column.
+
+    The picker once drew the same option twice when two entries shared a value
+    (a configured custom model that also appears in the catalog): rows were keyed
+    by value, so duplicate React keys mis-reconciled as soon as the window
+    scrolled, leaving a stale copy.
+    """
+    def body(row: str) -> str:
+        # Drop the marker column (❯ focused, ↑/↓ more-above/below) so the same
+        # option drawn twice compares equal even when only one copy is focused.
+        return row.lstrip(" \u276f\u2191\u2193").strip()
+
+    found = []
+    for i in range(1, len(rows)):
+        a, b = body(rows[i - 1]), body(rows[i])
+        if a and a == b:
+            found.append((i, rows[i].strip()))
+    return found
+
+
 def main() -> int:
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(repo)
@@ -94,8 +115,15 @@ def main() -> int:
     mismatches = [
         (i, n, b) for i, (n, b) in enumerate(zip(node_rows, bun_rows)) if n != b
     ]
+    dupes = duplicate_rows(node_rows)
+    if dupes:
+        print(f"FAIL — {len(dupes)} duplicated row(s) in the rendered list:")
+        for i, row in dupes:
+            print(f"  row {i}: {row!r}")
+        return 1
+
     if not mismatches:
-        print(f"OK — {len(node_rows)} rows identical under node and bun")
+        print(f"OK — {len(node_rows)} rows identical under node and bun, no duplicated rows")
         return 0
 
     print(f"FAIL — {len(mismatches)} row(s) differ between node and bun:\n")
